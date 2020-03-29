@@ -142,7 +142,7 @@ namespace Reflex::Core
 		// Storage for all components
 		std::vector< std::unique_ptr< ComponentAllocatorBase > > m_components;
 		//std::vector<  > m_componentEvents;
-		std::unordered_map< std::string, unsigned > m_componentNameToIndex;
+		std::unordered_map< std::string, size_t > m_componentNameToIndex;
 		std::queue< unsigned > m_freeList;
 
 		// List of systems, indexed by their type, storage for all systems
