@@ -189,29 +189,66 @@ namespace Reflex
 		TrimRight( str );
 	}
 
-	template< typename CharType, typename T >
-	std::basic_string< CharType > ToBasicString( const T& t )
+	template< typename T >
+	T FromString( const std::string& str )
 	{
-		std::basic_stringstream< CharType > stream;
-		stream << t;
-		return stream.str();
+		T out;
+		std::stringstream stream( str );
+		stream >> out;
+		return out;
+	}
+
+	template< typename T >
+	void FromStringV( const std::string& str, T& t )
+	{
+		std::stringstream stream( str );
+		stream >> t;
+	}
+
+	template< typename T, typename... Args >
+	void FromStringV( const std::string& str, T& t, Args&... args )
+	{
+		FromStringV( str, t );
+		FromStringV( str, args... );
 	}
 
 	template< typename T >
 	std::string ToString( const T& t )
 	{
-		return ToBasicString< char >( t );
+		return Stream( t );
 	}
 
-	template< typename T, typename ... Args >
-	std::string ToString( const T& t, const Args& ... args )
+	template< typename T, typename... Args >
+	std::string ToString( const T& t, const Args&... args )
 	{
 		return ToString( t ) + ToString( args... );
 	}
 
-	inline std::string ToString( const sf::Vector2f& t )
+	template<>
+	inline std::string ToString< sf::Vector2f >( const sf::Vector2f& vec )
 	{
-		return ToString( t.x, ", ", t.y );
+		return ToString( vec.x, ", ", vec.y );
+	}
+
+	template<>
+	inline sf::Vector2f FromString< sf::Vector2f >( const std::string& str )
+	{
+		sf::Vector2f vec;
+		FromStringV( str, vec.x, vec.y );
+		return vec;
+	}
+	template<>
+	inline std::string ToString< sf::Color >( const sf::Color& colour )
+	{
+		return ToString( colour.r, ", ", colour.g, ", ", colour.b, ", ", colour.a );
+	}
+
+	template<>
+	inline sf::Color FromString< sf::Color >( const std::string& str )
+	{
+		sf::Color colour;
+		FromStringV( str, colour.r, colour.g, colour.b, colour.a );
+		return colour;
 	}
 
 	// Centre the origin of an SFML object (such as Sprite, Text, Shape etc.)
@@ -220,6 +257,12 @@ namespace Reflex
 	{
 		sf::FloatRect bounds = object.getLocalBounds();
 		object.setOrigin( std::floor( bounds.left + bounds.width / 2.f ), std::floor( bounds.top + bounds.height / 2.f ) );
+	}
+
+	template< typename T >
+	bool IsDefault( const T& vec )
+	{
+		return vec == T{};
 	}
 
 	// Awful conversions

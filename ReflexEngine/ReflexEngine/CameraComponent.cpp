@@ -30,6 +30,74 @@ namespace Reflex::Components
 	{
 	}
 
+	namespace
+	{
+		std::string flagNames[] =
+		{
+			"MousePanning",
+			"WASDPanning",
+			"ArrowPanning",
+			"MouseZooming",
+			"ZoomCentreOnMouse",
+			"AdditivePanning",
+			"NormaliseDiagonalPanning",
+			"StartActivated",
+		};
+	}
+
+	bool Camera::SetValue( const std::string& variable, const std::string& value )
+	{
+		static_assert( std::size( flagNames ) == ( size_t )NumFlags );
+
+		for( unsigned i = 0; i < std::size( flagNames ); ++i )
+		{
+			if( variable == flagNames[i] )
+			{
+				flags.set( i, Reflex::FromString< bool >( value ) );
+				return true;
+			}
+		}
+
+		if( variable == "PanSpeed" )
+		{
+			panSpeed = Reflex::FromString< sf::Vector2f >( value );
+			return true;
+		}
+		else if( variable == "PanMouseMargin" )
+		{
+			panMouseMargin = Reflex::FromString< sf::Vector2f >( value );
+			return true;
+		}
+		else if( variable == "FollowInterpSpeed" )
+		{
+			followInterpSpeed = Reflex::FromString< float >( value );
+			return true;
+		}
+		else if( variable == "ZoomScaleFactor" )
+		{
+			zoomScaleFactor = Reflex::FromString< float >( value );
+			return true;
+		}
+
+		return false;
+	}
+
+	void Camera::GetValues( std::unordered_map< std::string, std::string >& values ) const
+	{
+		for( unsigned i = 0; i < std::size( flagNames ); ++i )
+			if( flags.test( i ) )
+				values[flagNames[i]] = "true";
+
+		if( !Reflex::IsDefault( panSpeed ) )
+			values["PanSpeed"] = Reflex::ToString( panSpeed );
+		if( !Reflex::IsDefault( panMouseMargin ) )
+			values["PanMouseMargin"] = Reflex::ToString( panMouseMargin );
+		if( followInterpSpeed )
+			values["FollowInterpSpeed"] = Reflex::ToString( followInterpSpeed );
+		if( zoomScaleFactor )
+			values["ZoomScaleFactor"] = Reflex::ToString( zoomScaleFactor );
+	}
+
 	void Camera::OnConstructionComplete()
 	{
 		if( flags.test( StartActivated ) || !GetObject().GetWorld().GetActiveCamera().IsValid() )

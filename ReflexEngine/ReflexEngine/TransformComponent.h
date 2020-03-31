@@ -18,8 +18,9 @@ namespace Reflex::Components
 		Transform( const Transform& other );
 
 		bool SetValue( const std::string& variable, const std::string& value ) override;
-		std::unordered_map< std::string, std::string > GetValues() const override;
+		void GetValues( std::unordered_map< std::string, std::string >& values ) const override;
 		static std::string GetComponentName() { return "Transform"; }
+		static void RegisterSerialisedValues() {}
 
 		void setPosition( float x, float y );
 		void setPosition( const sf::Vector2f& position );
@@ -43,11 +44,15 @@ namespace Reflex::Components
 		float GetMaxVelocity() const { return m_maxVelocity; }
 
 		void SetZOrder( const unsigned renderIndex );
-		unsigned GetZOrder() const;
+		void IncrementZOrder();
 		void SetLayer( const unsigned layerIndex );
+		unsigned GetLayer() const;
 		unsigned GetRenderIndex() const;
 
 	protected:
+		unsigned m_renderIndex = 0U;
+		static unsigned s_nextRenderIndex;
+
 		float m_rotateDegreesPerSec = 0.0f;
 		float m_rotateDurationSec = 0.0f;
 		std::function< void( const Transform::Handle& ) > m_finishedRotationCallback;

@@ -4,6 +4,90 @@
 
 namespace Reflex::Components
 {
+	namespace
+	{
+		std::string behaviourNames[] =
+		{
+			"Seek",
+			"Flee",
+			"Arrival",
+			"Wander",
+			"Pursue",
+			"Evade",
+		};
+
+		static_assert( std::size( behaviourNames ) == ( size_t )Steering::Behaviours::NumBehaviours );
+	}
+
+	bool Steering::SetValue( const std::string& variable, const std::string& value )
+	{
+		for( unsigned i = 0; i < std::size( behaviourNames ); ++i )
+		{
+			if( variable == behaviourNames[i] )
+			{
+				m_behaviours.set( i, Reflex::FromString< bool >( value ) );
+				return true;
+			}
+		}
+
+		if( variable == "MaxForce" )
+		{
+			m_maxForce = Reflex::FromString< float >( value );
+			return true;
+		}
+		else if( variable == "Mass" )
+		{
+			m_mass = Reflex::FromString< float >( value );
+			return true;
+		}
+		else if( variable == "SlowingRadius" )
+		{
+			m_slowingRadius = Reflex::FromString< float >( value );
+			return true;
+		}
+		else if( variable == "WanderCircleRadius" )
+		{
+			m_wanderCircleRadius = Reflex::FromString< float >( value );
+			return true;
+		}
+		else if( variable == "WanderAngleDelta" )
+		{
+			m_wanderAngleDelta = Reflex::FromString< float >( value );
+			return true;
+		}
+		else if( variable == "WanderCircleDistance" )
+		{
+			m_wanderCircleDistance = Reflex::FromString< float >( value );
+			return true;
+		}
+
+		return false;
+	}
+
+	void Steering::GetValues( std::unordered_map< std::string, std::string >& values ) const
+	{
+		for( unsigned i = 0; i < std::size( behaviourNames ); ++i )
+			if( m_behaviours.test( i ) )
+				values[behaviourNames[i]] = "true";
+
+		values["MaxForce"] = Reflex::ToString( m_maxForce );
+		values["Mass"] = Reflex::ToString( m_mass );
+
+		// Arrival
+		if( IsBehaviourSet( Behaviours::Arrival ) )
+			values["SlowingRadius"] = Reflex::ToString( m_slowingRadius );
+
+		float m_slowingRadius = 100.0f;
+
+		// Wander
+		if( IsBehaviourSet( Behaviours::Wander ) )
+		{
+			values["WanderCircleRadius"] = Reflex::ToString( m_wanderCircleRadius );
+			values["WanderCircleDistance"] = Reflex::ToString( m_wanderCircleDistance );
+			values["WanderAngleDelta"] = Reflex::ToString( m_wanderAngleDelta );
+		}
+	}
+
 	void Steering::Seek( const sf::Vector2f& target, const float maxVelocity )
 	{
 		SetBehaviourInternal( Behaviours::Seek );

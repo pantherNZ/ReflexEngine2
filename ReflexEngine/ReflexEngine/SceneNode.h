@@ -31,14 +31,11 @@ namespace Reflex::Core
 		unsigned GetChildrenCount() const;
 		Reflex::Object GetChild( const unsigned index ) const;
 		Reflex::Object GetParent() const;
+		Reflex::Object GetObject() const;
 
 	protected:
 		Reflex::Object m_owningObject;
 		Reflex::Object m_parent;
 		std::vector< Reflex::Object > m_children;
-		unsigned m_renderIndex = 0U;
-		unsigned m_layerIndex = 0U;
-
-		static unsigned s_nextRenderIndex;
 	};
 }

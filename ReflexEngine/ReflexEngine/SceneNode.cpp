@@ -5,24 +5,18 @@
 
 namespace Reflex::Core
 {
-	unsigned SceneNode::s_nextRenderIndex = 0U;
-
 	SceneNode::SceneNode( const Reflex::Object& owner )
 		: m_owningObject( owner )
 		, m_parent()
 		, m_children()
-		, m_renderIndex( 0U )
-		, m_layerIndex( 0U )
 	{
 
 	}
 
 	SceneNode::SceneNode( const SceneNode& other )
-		: m_owningObject()
-		, m_parent()
-		, m_children()
-		, m_renderIndex( other.m_renderIndex )
-		, m_layerIndex( other.m_layerIndex )
+		: m_owningObject( other.m_owningObject )
+		, m_parent( other.m_parent )
+		, m_children( other.m_children )
 	{
 
 	}
@@ -30,7 +24,7 @@ namespace Reflex::Core
 	SceneNode::~SceneNode()
 	{
 		if( m_parent )
-			m_parent.GetTransform()->DetachChild( m_owningObject );
+			m_parent.GetTransform()->DetachChild( GetObject() );
 	}
 
 	void SceneNode::AttachChild( const Reflex::Object& child )
@@ -40,9 +34,9 @@ namespace Reflex::Core
 		if( transform->m_parent )
 			transform->m_parent.GetTransform()->DetachChild( child );
 
-		transform->m_parent = m_owningObject;
-		transform->SetZOrder( s_nextRenderIndex++ );
-		transform->SetLayer( m_layerIndex + 1 );
+		transform->m_parent = GetObject();
+		transform->IncrementZOrder();
+		transform->SetLayer( GetObject().GetTransform()->GetLayer() + 1 );
 		m_children.push_back( child );
 	}
 
@@ -70,7 +64,7 @@ namespace Reflex::Core
 		TODO( "Cache the world transform" );
 		sf::Transform worldTransform;
 
-		for( auto node = m_owningObject; node.IsValid(); node = node.GetTransform()->m_parent )
+		for( auto node = GetObject(); node.IsValid(); node = node.GetTransform()->m_parent )
 			worldTransform = node.GetTransform()->getTransform() * worldTransform;
 
 		return worldTransform;
@@ -85,7 +79,7 @@ namespace Reflex::Core
 	{
 		sf::Vector2f worldTranslation;
 
-		for( auto node = m_owningObject; node.IsValid(); node = node.GetTransform()->m_parent )
+		for( auto node = GetObject(); node.IsValid(); node = node.GetTransform()->m_parent )
 		{
 			worldTranslation.x += node.GetTransform()->getPosition().x;
 			worldTranslation.y += node.GetTransform()->getPosition().y;
@@ -98,7 +92,7 @@ namespace Reflex::Core
 	{
 		float worldRotation = 0.0f;
 
-		for( auto node = m_owningObject; node.IsValid(); node = node.GetTransform()->m_parent )
+		for( auto node = GetObject(); node.IsValid(); node = node.GetTransform()->m_parent )
 			worldRotation += node.GetTransform()->getRotation();
 
 		return worldRotation;
@@ -108,7 +102,7 @@ namespace Reflex::Core
 	{
 		sf::Vector2f worldScale( 1.0f, 1.0f );
 
-		for( auto node = m_owningObject; node.IsValid(); node = node.GetTransform()->m_parent )
+		for( auto node = GetObject(); node.IsValid(); node = node.GetTransform()->m_parent )
 		{
 			worldScale.x *= node.GetTransform()->getScale().x;
 			worldScale.y *= node.GetTransform()->getScale().y;
@@ -137,4 +131,10 @@ namespace Reflex::Core
 	{
 		return m_parent;
 	}
+
+	Reflex::Object SceneNode::GetObject() const
+	{
+		return m_owningObject;
+	}
+
 }

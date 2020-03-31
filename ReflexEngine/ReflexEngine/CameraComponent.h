@@ -16,6 +16,8 @@ namespace Reflex::Components
 		Camera( const Reflex::Object& owner, const sf::FloatRect& viewRect );
 		~Camera();
 
+		bool SetValue( const std::string& variable, const std::string& value ) override;
+		void GetValues( std::unordered_map< std::string, std::string >& values ) const override;
 		static std::string GetComponentName() { return "Camera"; }
 		void OnConstructionComplete() final;
 

@@ -5,6 +5,8 @@
 
 namespace Reflex::Components
 {
+	unsigned Transform::s_nextRenderIndex = 1U;
+
 	Transform::Transform( const Reflex::Object& owner, const sf::Vector2f& position /*= sf::Vector2f()*/, const float rotation /*= 0.0f*/, const sf::Vector2f& scale /*= sf::Vector2f( 1.0f, 1.0f )*/ )
 		: Component< Transform >( owner )
 		, SceneNode( owner )
@@ -27,14 +29,36 @@ namespace Reflex::Components
 
 	bool Transform::SetValue( const std::string& variable, const std::string& value )
 	{
+		if( variable == "Position" )
+		{
+			setPosition( Reflex::FromString< sf::Vector2f >( value ) );
+			return true;
+		}
+		else if( variable == "Rotation" )
+		{
+			setRotation( Reflex::FromString< float >( value ) );
+			return true;
+		}
+		else if( variable == "Scale" )
+		{
+			setScale( Reflex::FromString< sf::Vector2f >( value ) );
+			return true;
+		}
+		else if( variable == "RenderIndex" )
+		{
+			m_renderIndex = Reflex::FromString< unsigned >( value );
+			return true;
+		}
+
 		return false;
 	}
 
-	std::unordered_map< std::string, std::string > Transform::GetValues() const
+	void Transform::GetValues( std::unordered_map< std::string, std::string >& values ) const
 	{
-		std::unordered_map< std::string, std::string > ret;
-		ret["Position"] = Reflex::ToString( getPosition() );
-		return ret;
+		values["Position"] = Reflex::ToString( getPosition() );
+		values["Rotation"] = Reflex::ToString( getRotation() );
+		values["Scale"] = Reflex::ToString( getScale() );
+		//values["RenderIndex"] = Reflex::ToString( GetRenderIndex() );
 	}
 
 	void Transform::setPosition( float x, float y )
@@ -108,21 +132,27 @@ namespace Reflex::Components
 
 	void Transform::SetZOrder( const unsigned renderIndex )
 	{
-		m_renderIndex = renderIndex;
+		m_renderIndex = GetLayer() * 10000 + renderIndex;
 	}
 
-	unsigned Transform::GetZOrder() const
+	void Transform::IncrementZOrder()
 	{
-		return m_renderIndex;
+		SetZOrder( s_nextRenderIndex++ );
 	}
 
 	void Transform::SetLayer( const unsigned layerIndex )
 	{
-		m_layerIndex = layerIndex;
+		const auto idx = m_renderIndex % 10000;
+		m_renderIndex = layerIndex * 10000 + idx;
+	}
+
+	unsigned Transform::GetLayer() const
+	{
+		return m_renderIndex / 10000;
 	}
 
 	unsigned Transform::GetRenderIndex() const
 	{
-		return m_layerIndex * 10000 + m_renderIndex;
+		return m_renderIndex;
 	}
 }

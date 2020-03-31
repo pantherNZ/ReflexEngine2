@@ -12,6 +12,16 @@ namespace Reflex::Components
 
 	}
 
+	bool Interactable::SetValue( const std::string& variable, const std::string& value )
+	{
+		return false;
+	}
+
+	void Interactable::GetValues( std::unordered_map< std::string, std::string >& values ) const
+	{
+
+	}
+
 	bool Interactable::IsFocussed() const
 	{
 		return isFocussed;

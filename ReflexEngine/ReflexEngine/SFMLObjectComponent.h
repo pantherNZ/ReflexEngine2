@@ -12,6 +12,7 @@ namespace Reflex::Components
 		Convex,
 		Sprite,
 		Text,
+		NumTypes
 	};
 
 	// Class definition
@@ -27,6 +28,8 @@ namespace Reflex::Components
 		SFMLObject( const SFMLObject& other );
 		~SFMLObject() { }
 
+		bool SetValue( const std::string& variable, const std::string& value ) override;
+		void GetValues( std::unordered_map< std::string, std::string >& values ) const override;
 		static std::string GetComponentName() { return "SFMLObject"; }
 
 		// Get functions

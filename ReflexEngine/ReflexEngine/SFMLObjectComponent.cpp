@@ -116,4 +116,49 @@ namespace Reflex::Components
 	{
 		return m_type;
 	}
+
+	namespace
+	{
+		std::string objectNames[] =
+		{
+			"Invalid",
+			"Circle",
+			"Rectangle",
+			"Convex",
+			"Sprite",
+			"Text",
+		};
+
+		static_assert( std::size( objectNames ) == ( size_t )SFMLObjectType::NumTypes );
+	}
+
+	bool SFMLObject::SetValue( const std::string& variable, const std::string& value )
+	{
+		return false;
+	}
+
+	void SFMLObject::GetValues( std::unordered_map< std::string, std::string >& values ) const
+	{
+		values["Type"] = objectNames[( size_t )m_type];
+
+		switch( m_type )
+		{
+		case Reflex::Components::SFMLObjectType::Invalid:
+			break;
+		case Reflex::Components::SFMLObjectType::Circle:
+			if( !Reflex::IsDefault( GetCircleShape().getFillColor() ) )
+				values["FillColour"] = Reflex::ToString( GetCircleShape().getFillColor() );
+			break;
+		case Reflex::Components::SFMLObjectType::Rectangle:
+			break;
+		case Reflex::Components::SFMLObjectType::Convex:
+			break;
+		case Reflex::Components::SFMLObjectType::Sprite:
+			break;
+		case Reflex::Components::SFMLObjectType::Text:
+			break;
+		case Reflex::Components::SFMLObjectType::NumTypes:
+			break;
+		}
+	}
 }

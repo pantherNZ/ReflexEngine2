@@ -5,12 +5,13 @@
 // Implementation
 namespace Reflex::Core
 {
-	Engine::Engine( const std::string& windowName, const bool fullscreen, const sf::Time& timeStep )
+	Engine::Engine( const std::string& windowName, const bool fullscreen, const sf::Time& timeStep, const bool enableProfiling )
 		: m_updateInterval( timeStep )
 		, m_window()
 		, m_textureManager()
 		, m_fontManager()
 		, m_stateManager( Context( m_window, m_textureManager, m_fontManager ) )
+		, m_profilingEnabled( enableProfiling )
 	{
 		const auto modes = sf::VideoMode::getFullscreenModes();
 		m_window.create( modes[0], windowName, fullscreen ? sf::Style::Fullscreen : sf::Style::Default );
@@ -18,12 +19,13 @@ namespace Reflex::Core
 		Setup();
 	}
 
-	Engine::Engine( const int screenWidth, const int screenHeight, const std::string& windowName, const sf::Time& timeStep )
+	Engine::Engine( const int screenWidth, const int screenHeight, const std::string& windowName, const sf::Time& timeStep, const bool enableProfiling )
 		: m_updateInterval( timeStep )
 		, m_window()
 		, m_textureManager()
 		, m_fontManager()
 		, m_stateManager( Context( m_window, m_textureManager, m_fontManager ) )
+		, m_profilingEnabled( enableProfiling )
 	{
 		sf::VideoMode mode;
 		mode.width = screenWidth;
@@ -32,13 +34,35 @@ namespace Reflex::Core
 
 		Setup();
 	}
-	
+
+	Engine::Engine( const bool createWindow, const sf::Time& timeStep, const bool enableProfiling )
+		: m_updateInterval( timeStep )
+		, m_window()
+		, m_textureManager()
+		, m_fontManager()
+		, m_stateManager( Context( m_window, m_textureManager, m_fontManager ) )
+		, m_profilingEnabled( enableProfiling )
+	{
+		m_cmdMode = !createWindow;
+
+		if( createWindow )
+		{
+			const auto modes = sf::VideoMode::getFullscreenModes();
+			m_window.create( modes[0], "Reflex Engine", sf::Style::Default );
+		}
+
+		Setup();
+	}
+
+
 	void Engine::Setup()
 	{
 		srand( (unsigned )time( 0 ) );
 		m_window.setPosition( sf::Vector2i( -6, 0 ) );
 		ImGui::SFML::Init( m_window );
-		Profiler::GetProfiler();
+
+		if( m_profilingEnabled )
+			Profiler::GetProfiler();
 	}
 
 	Engine::~Engine()
@@ -55,10 +79,12 @@ namespace Reflex::Core
 			sf::Clock clock;
 			sf::Time accumlatedTime = sf::Time::Zero;
 
-			while( m_window.isOpen() )
+			while( m_cmdMode || m_window.isOpen() )
 			{
 				sf::Time deltaTime = std::min( clock.restart(), sf::seconds( 1.0f / 30.f ) );
-				Profiler::GetProfiler().FrameTick( deltaTime.asMicroseconds() );
+
+				if( m_profilingEnabled )
+					Profiler::GetProfiler().FrameTick( deltaTime.asMicroseconds() );
 
 				accumlatedTime += deltaTime;
 
@@ -69,22 +95,34 @@ namespace Reflex::Core
 					Update( m_updateInterval.asSeconds() );
 				}
 
-				ImGui::SFML::Update( m_window, deltaTime );
-				UpdateStatistics( deltaTime.asSeconds() );
-				Render();
+				if( !m_cmdMode )
+				{
+					ImGui::SFML::Update( m_window, deltaTime );
+					UpdateStatistics( deltaTime.asSeconds() );
+					Render();
+				}
 
 				const auto targetFPS = sf::seconds( 1.0f / m_fpsLimit );
 				if( m_fpsLimit > 0 && clock.getElapsedTime() < targetFPS )
 					sf::sleep( targetFPS - clock.getElapsedTime() );
 			}
 
-			Profiler::GetProfiler().OutputResults( "Performance_Results.txt" );
+			if( m_profilingEnabled )
+				Profiler::GetProfiler().OutputResults( "Performance_Results.txt" );
 		}
 		catch( std::exception& e )
 		{
 			LOG_CRIT( "*EXCEPTION: " << *e.what() );
 			throw;
 		}
+	}
+
+	void Engine::Exit()
+	{
+		m_cmdMode = false;
+
+		if( m_window.isOpen() )
+			m_window.close();
 	}
 
 	void Engine::ProcessEvents()

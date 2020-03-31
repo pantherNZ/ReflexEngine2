@@ -14,6 +14,8 @@ namespace Reflex::Components
 		Grid( const Reflex::Object& owner, const unsigned width, const unsigned height, const float cellWidth, const float cellHeight );
 		Grid( const Reflex::Object& owner, const sf::Vector2u gridSize, const sf::Vector2f cellSize );
 
+		bool SetValue( const std::string& variable, const std::string& value ) override;
+		void GetValues( std::unordered_map< std::string, std::string >& values ) const override;
 		static std::string GetComponentName() { return "Grid"; }
 
 		void AddToGrid( const Reflex::Object& handle, const unsigned x, const unsigned y );

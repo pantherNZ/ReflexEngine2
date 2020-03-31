@@ -12,11 +12,17 @@ namespace Reflex::Core
 	class Engine : private sf::NonCopyable
 	{
 	public:
-		Engine( const std::string& windowName = "Reflex Engine", const bool fullscreen = false, const sf::Time& timeStep = sf::seconds( 1.0f / 30.0f ) );
-		Engine( const int screenWidth, const int screenHeight, const std::string& windowName = "Reflex Engine", const sf::Time& timeStep = sf::seconds( 1.0f / 30.0f ) );
+		// Construct an engine instance
+		explicit Engine( const std::string& windowName = "Reflex Engine", const bool fullscreen = false, const sf::Time& timeStep = sf::seconds( 1.0f / 30.0f ), const bool enableProfiling = false );
+		explicit Engine( const int screenWidth, const int screenHeight, const std::string& windowName = "Reflex Engine", const sf::Time& timeStep = sf::seconds( 1.0f / 30.0f ), const bool enableProfiling = false );
+
+		// This constructor is intended for creating an engine without a window / UI (by passing false)
+		explicit Engine( const bool createWindow, const sf::Time& timeStep = sf::seconds( 1.0f / 30.0f ), const bool enableProfiling = false );
+
 		~Engine();
 
 		void Run();
+		void Exit();
 
 		template< typename T >
 		void RegisterState( const bool isStartingState = false );
@@ -51,6 +57,8 @@ namespace Reflex::Core
 		unsigned int m_statisticsNumFrames = 0U;
 
 		// ImGui
+		bool m_profilingEnabled = false;
+		bool m_cmdMode = false;
 		bool m_showMetrics = false;
 		bool m_showStyleEditor = false;
 		int m_fpsLimit = 60;

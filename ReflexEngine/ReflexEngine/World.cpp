@@ -24,9 +24,6 @@ namespace Reflex::Core
 		//, m_tileMap( m_worldBounds )
 	{
 		Setup();
-
-		const auto test = CreateObject( sf::Vector2f( 30.0f, 0.0f ), 0.0f, sf::Vector2f( 1.0f, 1.0f ) );
-		CreateROFile( "test", test );
 	}
 
 	void World::Setup()
@@ -89,7 +86,7 @@ namespace Reflex::Core
 			m_objects.components.emplace_back();
 			m_objects.flags.emplace_back();
 			m_objects.counters.emplace_back();
-			index = m_objects.components.size() - 1;
+			index = ( unsigned )m_objects.components.size() - 1;
 
 			for( auto& allocator : m_components )
 				allocator->ExpandToFit( index + 1 );
@@ -139,22 +136,28 @@ namespace Reflex::Core
 
 		const auto& components = obj["Components"];
 
-		for( unsigned i = 0; i < components.size(); ++i )
+		for( unsigned i = 0; i < components.getMemberNames().size(); ++i )
 		{
-			const auto& component = components[i];
-			const auto name = component["Name"].asString();
-			const auto found = m_componentNameToIndex.find( name );
+			const auto componentName = components.getMemberNames()[i];
+			const auto found = m_componentNameToIndex.find( componentName );
 
 			if( found == m_componentNameToIndex.end() )
-				THROW( "Invalid component name in file: " << objectFile << " , component: :" << name );
+				THROW( "Invalid component name in file: " << objectFile << " , component: " << componentName );
 
-			const auto values = component["Values"];
-
-			for( unsigned j = 0; j < values.size(); ++j )
+			Reflex::Components::BaseComponent* component = nullptr;
+				
+			if( componentName == Reflex::Components::Transform::GetComponentName() )
+				component = ObjectGetComponent( newObject, found->second );
+			else
+				component = ObjectAddEmptyComponent( newObject, found->second );
+				
+			const auto& componentData = components[componentName];
+			for( unsigned j = 0; j < componentData.getMemberNames().size(); ++j )
 			{
-				auto* newComponent = ObjectAddEmptyComponent( newObject, found->second );
-				//const auto value = values[j].asString();
-				//newComponent->SetValue( value[j], );
+				const auto variable = componentData.getMemberNames()[j];
+				const auto value = componentData[variable].asString();
+				if( !component->SetValue( variable, value ) )
+					THROW( "Invalid component variable name in file: " << objectFile << " , component: " << componentName << ", variable: " << variable );
 			}
 		}
 
@@ -183,7 +186,8 @@ namespace Reflex::Core
 				continue;
 
 			Json::Value data;
-			const auto values = ObjectGetComponent( object, i )->GetValues();
+			std::unordered_map< std::string, std::string > values;
+			ObjectGetComponent( object, i )->GetValues( values );
 
 			for( const auto& value : values )
 				data[value.first] = value.second;

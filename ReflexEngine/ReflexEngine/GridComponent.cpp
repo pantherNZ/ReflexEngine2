@@ -31,6 +31,16 @@ namespace Reflex::Components
 		m_children.resize( GetTotalCells() );
 	}
 
+	bool Grid::SetValue( const std::string& variable, const std::string& value )
+	{
+		return false;
+	}
+
+	void Grid::GetValues( std::unordered_map< std::string, std::string >& values ) const
+	{
+
+	}
+
 	void Grid::AddToGrid( const Reflex::Object& handle, const unsigned x, const unsigned y )
 	{
 		AddToGrid( handle, sf::Vector2u( x, y ) );
@@ -52,8 +62,8 @@ namespace Reflex::Components
 		const auto insertIndex = GetIndex( index );
 		m_children[insertIndex] = handle;
 		transform->m_parent = GetObject();
-		transform->SetZOrder( Reflex::Core::SceneNode::s_nextRenderIndex++ );
-		transform->SetLayer( GetObject().GetTransform()->m_layerIndex + 1 );
+		transform->IncrementZOrder();
+		transform->SetLayer( GetObject().GetTransform()->GetLayer() + 1 );
 		transform->setPosition( GetCellPositionRelative( index ) );
 	}
 

@@ -33,7 +33,7 @@ namespace Reflex::Components
 		virtual void OnConstructionComplete() { }
 		static std::string GetComponentName() { assert( false ); }
 		virtual bool SetValue( const std::string& variable, const std::string& value ) { return false; }
-		virtual std::unordered_map< std::string, std::string > GetValues() const { return {}; }
+		virtual void GetValues( std::unordered_map< std::string, std::string >& values ) const { }
 
 		std::unique_ptr< Reflex::Object > m_object;
 		static ComponentFamily s_componentFamilyIdx;
