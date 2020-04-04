@@ -2,6 +2,7 @@
 
 #include <typeindex>
 #include <array>
+#include <vector>
 
 // Common Utility
 namespace Reflex
@@ -237,6 +238,7 @@ namespace Reflex
 		FromStringV( str, vec.x, vec.y );
 		return vec;
 	}
+
 	template<>
 	inline std::string ToString< sf::Color >( const sf::Color& colour )
 	{
@@ -249,6 +251,34 @@ namespace Reflex
 		sf::Color colour;
 		FromStringV( str, colour.r, colour.g, colour.b, colour.a );
 		return colour;
+	}
+
+	template<>
+	inline std::string ToString< sf::Vector2u >( const sf::Vector2u& vec )
+	{
+		return ToString( vec.x, ", ", vec.y );
+	}
+
+	template<>
+	inline sf::Vector2u FromString< sf::Vector2u >( const std::string& str )
+	{
+		sf::Vector2u vec;
+		FromStringV( str, vec.x, vec.y );
+		return vec;
+	}
+
+	template<>
+	inline std::string ToString< sf::Vector2i >( const sf::Vector2i& vec )
+	{
+		return ToString( vec.x, ", ", vec.y );
+	}
+
+	template<>
+	inline sf::Vector2i FromString< sf::Vector2i >( const std::string& str )
+	{
+		sf::Vector2i vec;
+		FromStringV( str, vec.x, vec.y );
+		return vec;
 	}
 
 	// Centre the origin of an SFML object (such as Sprite, Text, Shape etc.)
@@ -470,7 +500,7 @@ namespace Reflex
 
 	bool IntersectCircleSquare( const sf::Vector2f& circle_position, const float circle_radius, const sf::Vector2f& square_position, const float half_width );
 
-	template< class T >
+	template< typename T >
 	const typename T::value_type& RandomElement( const T& container )
 	{
 		if( container.empty() )
@@ -478,12 +508,24 @@ namespace Reflex
 		return container[RandomUnsigned( ( unsigned )container.size() )];
 	}
 
-	template< class T >
+	template< typename T >
 	typename T::value_type& RandomElement( const T& container )
 	{
 		if( container.empty() )
 			throw std::runtime_error( "RandomElement called on empty container" );
 		return container[RandomUnsigned( ( unsigned )container.size() )];
+	}
+
+	template< typename T >
+	typename std::vector<T>::const_iterator Erase( std::vector<T>& container, const T& value )
+	{
+		return container.erase( container.begin(), container.end(), value );
+	}
+
+	template< typename T, typename Pred >
+	typename std::vector<T>::const_iterator EraseIf( std::vector<T>& container, const Pred& pred )
+	{
+		return container.erase( std::remove_if( container.begin(), container.end(), pred ), container.end() );
 	}
 
 	template< typename T >
@@ -503,4 +545,26 @@ namespace Reflex
 	{
 		return ( container.push_back( args ), ... );
 	}
+
+	#define FOREGROUND_YELLOW FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY
+
+	struct SetConsoleTextAttributes
+	{
+		SetConsoleTextAttributes( const WORD attributes )
+		{
+			CONSOLE_SCREEN_BUFFER_INFO Info;
+			HANDLE hStdout = GetStdHandle( STD_OUTPUT_HANDLE );
+			GetConsoleScreenBufferInfo( hStdout, &Info );
+			savedAttributes = Info.wAttributes;
+			SetConsoleTextAttribute( hStdout, attributes );
+		}
+
+		~SetConsoleTextAttributes()
+		{
+			SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), savedAttributes );
+		}
+
+	private:
+		WORD savedAttributes = 0;
+	};
 }

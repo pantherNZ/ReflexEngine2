@@ -28,4 +28,8 @@ namespace Reflex::Components
 		return GetObject().GetTransform(); 
 	}
 
+	Reflex::Core::World& BaseComponent::GetWorld() const
+	{
+		return GetObject().GetWorld();
+	}
 }

@@ -38,6 +38,11 @@ namespace Reflex
 		return *m_world;
 	}
 
+	bool Object::IsFlagSet( const ObjectFlags flag ) const
+	{
+		return GetWorld().IsObjectFlagSet( *this, flag );
+	}
+
 	bool Object::IsValid() const
 	{
 		return m_world && GetWorld().IsValidObject( *this );

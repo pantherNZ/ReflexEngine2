@@ -13,7 +13,9 @@ public:
 		unsigned titleIdx = 0;
 
 		OnMessage( Stream( "Unit Testing Starting (" << tests.size() << " test, " << titles.size() << " sections)" ) );
-		OnMessage( titles.front() );
+		OnMessage( "\n" + titles.front() );
+
+		std::vector< std::string > failedTests;
 
 		for( size_t idx = 0; idx < tests.size(); ++idx )
 		{
@@ -21,15 +23,38 @@ public:
 
 			if( test.titleIdx > titleIdx )
 			{
-				OnMessage( titles[titleIdx] );
+				OnMessage( "\n" + titles[titleIdx] );
 				++titleIdx;
 			}
 
 			OnMessage( Stream( "[" << ( idx + 1 ) << "/" << tests.size() << "] " << test.name ) );
 			if( test.func() )
+			{
 				OnSuccess( test );
+			}
 			else
+			{
 				OnFail( test );
+				failedTests.push_back( Stream( "Test [" << ( idx + 1 ) << "]: " << test.name ) );
+			}
+		}
+
+		OnMessage( Stream( "\n\nUnit Testing Summary:" ) );
+
+		if( !failedTests.empty() )
+		{
+			Reflex::SetConsoleTextAttributes t( FOREGROUND_RED );
+			OnMessage( Stream( "\n" << failedTests.size() << " failed tests:" ) );
+
+			for( const auto& failedTest : failedTests )
+			{
+				OnMessage( failedTest );
+			}
+		}
+		else
+		{
+			Reflex::SetConsoleTextAttributes t( FOREGROUND_GREEN );
+			OnMessage( "All tests succeeded!" );
 		}
 	}
 
@@ -50,11 +75,13 @@ protected:
 
 	virtual void OnSuccess( const Test& test ) const
 	{
+		Reflex::SetConsoleTextAttributes t( FOREGROUND_GREEN );
 		std::cout << "\t- Success" << test.messageSuccess << "\n";
 	}
 
 	virtual void OnFail( const Test& test ) const
 	{
+		Reflex::SetConsoleTextAttributes t( FOREGROUND_RED );
 		std::cout << "\t- Fail" << test.messageFail << "\n";
 	}
 
@@ -64,7 +91,7 @@ protected:
 	}
 
 	template< typename Bind >
-	void RegisterTest( const Bind b, const bool expectedResult = true, const std::string& messageSuccess = "", const std::string& messageFail = "", const std::string& name = "" )
+	void RegisterTest( const Bind b, const bool expectedResult = true, const std::string& name = "", const std::string& messageSuccess = "", const std::string& messageFail = "" )
 	{
 		if( titles.empty() )
 			titles.emplace_back();

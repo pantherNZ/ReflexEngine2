@@ -133,6 +133,9 @@ namespace Reflex::Components
 	void Transform::SetZOrder( const unsigned renderIndex )
 	{
 		m_renderIndex = GetLayer() * 10000 + renderIndex;
+
+		if( Component::GetObject().IsFlagSet( ObjectFlags::ConstructionComplete ) )
+			GetWorld().GetEventManager().Emit( *this, RenderIndexChangedEvent{ Component::GetObject(), m_renderIndex } );
 	}
 
 	void Transform::IncrementZOrder()
@@ -144,6 +147,9 @@ namespace Reflex::Components
 	{
 		const auto idx = m_renderIndex % 10000;
 		m_renderIndex = layerIndex * 10000 + idx;
+
+		if( Component::GetObject().IsFlagSet( ObjectFlags::ConstructionComplete ) )
+			GetWorld().GetEventManager().Emit( *this, RenderIndexChangedEvent{ Component::GetObject(), m_renderIndex } );
 	}
 
 	unsigned Transform::GetLayer() const

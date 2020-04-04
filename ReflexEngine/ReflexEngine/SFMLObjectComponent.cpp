@@ -146,17 +146,25 @@ namespace Reflex::Components
 		case Reflex::Components::SFMLObjectType::Invalid:
 			break;
 		case Reflex::Components::SFMLObjectType::Circle:
-			if( !Reflex::IsDefault( GetCircleShape().getFillColor() ) )
-				values["FillColour"] = Reflex::ToString( GetCircleShape().getFillColor() );
+			GetShapeValues( values, GetCircleShape() );
 			break;
 		case Reflex::Components::SFMLObjectType::Rectangle:
+			GetShapeValues( values, GetRectangleShape() );
 			break;
 		case Reflex::Components::SFMLObjectType::Convex:
+			GetShapeValues( values, GetConvexShape() );
 			break;
 		case Reflex::Components::SFMLObjectType::Sprite:
+		{
+			if( !Reflex::IsDefault( GetSprite().getColor() ) )
+				values["Colour"] = Reflex::ToString( GetSprite().getColor() );
 			break;
+		}
 		case Reflex::Components::SFMLObjectType::Text:
+		{
+			GetShapeValues( values, GetText() );
 			break;
+		}
 		case Reflex::Components::SFMLObjectType::NumTypes:
 			break;
 		}

@@ -14,14 +14,16 @@ namespace Reflex::Systems
 		RequiresComponent( Reflex::Components::Transform );
 	}
 
-	void RenderSystem::Update( const float deltaTime )
+	void RenderSystem::OnComponentAdded( const Reflex::Object& object )
 	{
-		//PROFILE;
-		//TODO( "Dirty when a render index changes and only sort when that occurs (or a new component is added)" );
-		//std::sort( m_releventObjects.begin(), m_releventObjects.end(), []( const Reflex::Object& left, const Reflex::Object& right )
-		//	{
-		//		return left.GetTransform()->GetRenderIndex() < right.GetTransform()->GetRenderIndex();
-		//	} );
+		GetWorld().GetEventManager().Subscribe< Components::Transform::RenderIndexChangedEvent >( *this, &RenderSystem::OnRenderIndexChanged );
+	}
+
+	void RenderSystem::OnRenderIndexChanged( const Components::Transform::RenderIndexChangedEvent& e )
+	{
+		m_releventObjects.erase( Reflex::Find( m_releventObjects, e.object ) );
+		const auto newPos = GetInsertionIndex( e.object );
+		m_releventObjects.insert( newPos, e.object );
 	}
 
 	void RenderSystem::Render( sf::RenderTarget& target, sf::RenderStates states ) const

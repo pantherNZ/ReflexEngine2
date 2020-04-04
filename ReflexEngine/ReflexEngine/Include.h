@@ -13,3 +13,5 @@
 #include "MovementSystem.h"
 #include "CameraSystem.h"
 #include "SteeringSystem.h"
+
+#include "EventManager.h"

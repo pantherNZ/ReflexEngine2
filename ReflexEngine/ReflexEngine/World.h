@@ -6,6 +6,7 @@
 #include "System.h"
 #include "ComponentAllocator.h"
 #include "Object.h"
+#include "EventManager.h"
 
 // Engine class
 namespace Reflex 
@@ -21,12 +22,6 @@ namespace Reflex
 
 namespace Reflex::Core
 {
-	enum class ObjectFlags
-	{
-		Deleted,
-		NumFlags,
-	};
-
 	// World class
 	class World : private sf::NonCopyable
 	{
@@ -99,6 +94,7 @@ namespace Reflex::Core
 		const sf::RenderWindow& GetWindow() const { return m_context.window; }
 		TextureManager& GetTextureManager() { return m_context.textureManager; }
 		FontManager& GetFontManager() { return m_context.fontManager; }
+		EventManager& GetEventManager() { return eventManager; }
 
 		sf::FloatRect GetBounds() const;
 		Reflex::Handle< Reflex::Components::Transform > GetSceneRoot() const;
@@ -112,6 +108,8 @@ namespace Reflex::Core
 
 		sf::Vector2f GetMousePosition( const Reflex::Handle< Reflex::Components::Camera >& camera = Reflex::Handle< Reflex::Components::Camera >() ) const;
 		sf::Vector2f RandomWindowPosition( const float margin = 0.0f ) const;
+
+		//void TriggerGameEvent( const Event&)
 
 	protected:
 		void Setup();
@@ -127,6 +125,7 @@ namespace Reflex::Core
 		Context m_context;
 		sf::View m_worldView;
 		sf::FloatRect m_worldBounds;
+		EventManager eventManager;
 
 		// Object data
 		struct ObjectData
@@ -159,6 +158,12 @@ namespace Reflex::Core
 	Handle< T >  World::ObjectAddComponent( const Object& object, Args&& ... args )
 	{
 		const auto family = T::GetFamily();
+
+		if( m_objects.components[object.GetIndex()].test( family ) )
+		{
+			LOG_CRIT( "You cannot add multiple of the same component!" );
+			return {};
+		}
 
 		if( family >= m_components.size() )
 		{

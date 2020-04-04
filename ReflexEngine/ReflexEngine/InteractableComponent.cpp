@@ -14,12 +14,33 @@ namespace Reflex::Components
 
 	bool Interactable::SetValue( const std::string& variable, const std::string& value )
 	{
+		if( variable == "SelectionIsToggle" )
+		{
+			selectionIsToggle = Reflex::FromString< bool >( value );
+			return true;
+		}
+		else if( variable == "UnselectIfLostFocus" )
+		{
+			unselectIfLostFocus = Reflex::FromString< bool >( value );
+			return true;
+		}
+		else if( variable == "IsEnabled" )
+		{
+			isEnabled = Reflex::FromString< bool >( value );
+			return true;
+		}
+
 		return false;
 	}
 
 	void Interactable::GetValues( std::unordered_map< std::string, std::string >& values ) const
 	{
-
+		if( selectionIsToggle )
+			values["SelectionIsToggle"] = "true";
+		if( unselectIfLostFocus )
+			values["UnselectIfLostFocus"] = "true";
+		if( isEnabled )
+			values["IsEnabled"] = "true";
 	}
 
 	bool Interactable::IsFocussed() const

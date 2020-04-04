@@ -43,8 +43,8 @@ namespace Reflex::Systems
 
 		virtual void OnSystemStartup() { }
 		virtual void OnSystemShutdown() { }
-		virtual void OnComponentAdded() { }
-		virtual void OnComponentRemoved() { }
+		virtual void OnComponentAdded( const Reflex::Object& object ) { }
+		virtual void OnComponentRemoved( const Reflex::Object& object ) { }
 		virtual std::vector< Reflex::Object >::const_iterator GetInsertionIndex( const Object& object ) const { return m_releventObjects.end(); }
 
 	private:

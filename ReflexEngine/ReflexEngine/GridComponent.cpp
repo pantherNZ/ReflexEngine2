@@ -33,12 +33,30 @@ namespace Reflex::Components
 
 	bool Grid::SetValue( const std::string& variable, const std::string& value )
 	{
+		if( variable == "GridSize" )
+		{
+			m_gridSize = Reflex::FromString< sf::Vector2u >( value );
+			return true;
+		}
+		else if( variable == "CellSize" )
+		{
+			m_cellSize = Reflex::FromString< sf::Vector2f >( value );
+			return true;
+		}
+		else if( variable == "CentreGrid" )
+		{
+			m_centreGrid = Reflex::FromString< bool >( value );
+			return true;
+		}
+
 		return false;
 	}
 
 	void Grid::GetValues( std::unordered_map< std::string, std::string >& values ) const
 	{
-
+		values["GridSize"] = Reflex::ToString( m_gridSize );
+		values["CellSize"] = Reflex::ToString( m_cellSize );
+		values["CentreGrid"] = Reflex::ToString( m_centreGrid );
 	}
 
 	void Grid::AddToGrid( const Reflex::Object& handle, const unsigned x, const unsigned y )

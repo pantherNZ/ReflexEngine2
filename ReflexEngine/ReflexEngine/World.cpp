@@ -102,6 +102,8 @@ namespace Reflex::Core
 			m_sceneGraphRoot.GetTransform()->AttachChild( newObject );
 		}
 
+		SetObjectFlag( newObject, ObjectFlags::ConstructionComplete );
+
 		return newObject;
 	}
 
@@ -322,7 +324,7 @@ namespace Reflex::Core
 
 			const auto insertionIter = system.second->GetInsertionIndex( object );
 			system.second->m_releventObjects.insert( insertionIter, object );
-			system.second->OnComponentAdded();
+			system.second->OnComponentAdded( object );
 		}
 	}
 
@@ -338,7 +340,7 @@ namespace Reflex::Core
 				continue;
 
 			system.second->m_releventObjects.erase( found );
-			system.second->OnComponentRemoved();
+			system.second->OnComponentRemoved( *found );
 		}
 	}
 

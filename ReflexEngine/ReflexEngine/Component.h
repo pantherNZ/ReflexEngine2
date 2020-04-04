@@ -24,6 +24,7 @@ namespace Reflex::Components
 		friend class Reflex::Core::World;
 		Reflex::Object GetObject() const;
 		Reflex::Handle< Transform > GetTransform() const;
+		Reflex::Core::World& GetWorld() const;
 
 	//protected:
 		BaseComponent() {}

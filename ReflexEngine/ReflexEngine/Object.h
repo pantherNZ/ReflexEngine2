@@ -15,6 +15,13 @@ namespace Reflex
 
 	namespace Components { class Transform; }
 
+	enum class ObjectFlags
+	{
+		Deleted,
+		ConstructionComplete,
+		NumFlags,
+	};
+
 	class Object
 	{
 	public:
@@ -59,6 +66,7 @@ namespace Reflex
 		//const Reflex::Core::World& GetWorld() const;
 		std::uint32_t GetIndex() const { return m_index; }
 		std::uint32_t GetCounter() const { return m_counter; }
+		bool IsFlagSet( const ObjectFlags flag ) const;
 
 		bool IsValid() const;
 		explicit operator bool() const;

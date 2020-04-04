@@ -144,6 +144,9 @@
     <ClInclude Include="Include.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="EventManager.h">
+      <Filter>Managers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TransformComponent.cpp">
@@ -226,6 +229,9 @@
     </ClCompile>
     <ClCompile Include="Component.cpp">
       <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="EventManager.cpp">
+      <Filter>Managers</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

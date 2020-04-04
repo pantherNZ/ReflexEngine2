@@ -8,7 +8,7 @@ namespace Reflex::Components
 {
 	class Grid;
 
-	class Transform : public Component< Transform >, public Reflex::Core::SceneNode
+	class Transform : public Component< Transform >, public Core::SceneNode, private Core::EventTriggerer
 	{
 	public:
 		friend class Reflex::Systems::MovementSystem;
@@ -48,6 +48,12 @@ namespace Reflex::Components
 		void SetLayer( const unsigned layerIndex );
 		unsigned GetLayer() const;
 		unsigned GetRenderIndex() const;
+
+		struct RenderIndexChangedEvent
+		{
+			const Object& object;
+			unsigned renderIdx = 0;
+		};
 
 	protected:
 		unsigned m_renderIndex = 0U;

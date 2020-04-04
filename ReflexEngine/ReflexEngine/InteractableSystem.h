@@ -13,7 +13,7 @@ namespace Reflex::Systems
 		void RegisterComponents() final;
 		void Update( const float deltaTime ) final;
 		void ProcessEvent( const sf::Event& event ) final;
-		void OnComponentAdded() final {}
+		void OnComponentAdded( const Reflex::Object& object ) final {}
 		void OnSystemStartup() final {}
 		void OnSystemShutdown() final {}
 

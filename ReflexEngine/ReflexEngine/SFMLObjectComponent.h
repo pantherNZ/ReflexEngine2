@@ -50,6 +50,15 @@ namespace Reflex::Components
 
 		const SFMLObjectType GetType() const;
 
+		template< typename T >
+		void GetShapeValues( std::unordered_map< std::string, std::string >& values, const T& shape ) const
+		{
+			if( !Reflex::IsDefault( shape.getFillColor() ) )
+				values["FillColour"] = Reflex::ToString( shape.getFillColor() );
+			if( !Reflex::IsDefault( shape.getOutlineColor() ) )
+				values["OutlineColour"] = Reflex::ToString( shape.getOutlineColor() );
+		};
+
 	private:
 		union ObjectType
 		{
