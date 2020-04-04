@@ -33,14 +33,14 @@ namespace Reflex::Components
 		return false;
 	}
 
-	void Interactable::GetValues( std::unordered_map< std::string, std::string >& values ) const
+	void Interactable::GetValues( std::vector< std::pair< std::string, std::string > >& values ) const
 	{
 		if( selectionIsToggle )
-			values["SelectionIsToggle"] = "true";
+			values.emplace_back( "SelectionIsToggle", "true" );
 		if( unselectIfLostFocus )
-			values["UnselectIfLostFocus"] = "true";
+			values.emplace_back( "UnselectIfLostFocus", "true" );
 		if( isEnabled )
-			values["IsEnabled"] = "true";
+			values.emplace_back( "IsEnabled", "true" );
 	}
 
 	bool Interactable::IsFocussed() const

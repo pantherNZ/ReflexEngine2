@@ -10,6 +10,7 @@ namespace Reflex::Components
 	Transform::Transform( const Reflex::Object& owner, const sf::Vector2f& position /*= sf::Vector2f()*/, const float rotation /*= 0.0f*/, const sf::Vector2f& scale /*= sf::Vector2f( 1.0f, 1.0f )*/ )
 		: Component< Transform >( owner )
 		, SceneNode( owner )
+		, EventTriggerer( GetWorld() )
 	{
 		assert( scale.x != 0.0f || scale.y != 0.0f );
 		sf::Transformable::setPosition( position );
@@ -20,6 +21,7 @@ namespace Reflex::Components
 	Transform::Transform( const Transform& other )
 		: SceneNode( other )
 		, Component( other )
+		, EventTriggerer( other )
 		, m_rotateDegreesPerSec( other.m_rotateDegreesPerSec )
 		, m_rotateDurationSec( other.m_rotateDurationSec )
 		, m_finishedRotationCallback( other.m_finishedRotationCallback )
@@ -53,12 +55,11 @@ namespace Reflex::Components
 		return false;
 	}
 
-	void Transform::GetValues( std::unordered_map< std::string, std::string >& values ) const
+	void Transform::GetValues( std::vector< std::pair< std::string, std::string > >& values ) const
 	{
-		values["Position"] = Reflex::ToString( getPosition() );
-		values["Rotation"] = Reflex::ToString( getRotation() );
-		values["Scale"] = Reflex::ToString( getScale() );
-		//values["RenderIndex"] = Reflex::ToString( GetRenderIndex() );
+		values.emplace_back( "Position", Reflex::ToString( getPosition() ) );
+		values.emplace_back( "Rotation", Reflex::ToString( getRotation() ) );
+		values.emplace_back( "Scale", Reflex::ToString( getScale() ) );
 	}
 
 	void Transform::setPosition( float x, float y )

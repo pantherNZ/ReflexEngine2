@@ -64,27 +64,27 @@ namespace Reflex::Components
 		return false;
 	}
 
-	void Steering::GetValues( std::unordered_map< std::string, std::string >& values ) const
+	void Steering::GetValues( std::vector< std::pair< std::string, std::string > >& values ) const
 	{
 		for( unsigned i = 0; i < std::size( behaviourNames ); ++i )
 			if( m_behaviours.test( i ) )
-				values[behaviourNames[i]] = "true";
+				values.emplace_back( behaviourNames[i], "true" );
 
-		values["MaxForce"] = Reflex::ToString( m_maxForce );
-		values["Mass"] = Reflex::ToString( m_mass );
+		values.emplace_back( "MaxForce", Reflex::ToString( m_maxForce ) );
+		values.emplace_back( "Mass", Reflex::ToString( m_mass ) );
 
 		// Arrival
 		if( IsBehaviourSet( Behaviours::Arrival ) )
-			values["SlowingRadius"] = Reflex::ToString( m_slowingRadius );
+			values.emplace_back( "SlowingRadius", Reflex::ToString( m_slowingRadius ) );
 
 		float m_slowingRadius = 100.0f;
 
 		// Wander
 		if( IsBehaviourSet( Behaviours::Wander ) )
 		{
-			values["WanderCircleRadius"] = Reflex::ToString( m_wanderCircleRadius );
-			values["WanderCircleDistance"] = Reflex::ToString( m_wanderCircleDistance );
-			values["WanderAngleDelta"] = Reflex::ToString( m_wanderAngleDelta );
+			values.emplace_back( "WanderCircleRadius", Reflex::ToString( m_wanderCircleRadius ) );
+			values.emplace_back( "WanderCircleDistance", Reflex::ToString( m_wanderCircleDistance ) );
+			values.emplace_back( "WanderAngleDelta", Reflex::ToString( m_wanderAngleDelta ) );
 		}
 	}
 

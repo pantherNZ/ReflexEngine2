@@ -8,7 +8,7 @@ namespace Reflex::Components
 {
 	class Grid;
 
-	class Transform : public Component< Transform >, public Core::SceneNode, private Core::EventTriggerer
+	class Transform : public Component< Transform >, public Core::SceneNode, public Core::EventTriggerer
 	{
 	public:
 		friend class Reflex::Systems::MovementSystem;
@@ -18,7 +18,7 @@ namespace Reflex::Components
 		Transform( const Transform& other );
 
 		bool SetValue( const std::string& variable, const std::string& value ) override;
-		void GetValues( std::unordered_map< std::string, std::string >& values ) const override;
+		void GetValues( std::vector< std::pair< std::string, std::string > >& values ) const override;
 		static std::string GetComponentName() { return "Transform"; }
 		static void RegisterSerialisedValues() {}
 

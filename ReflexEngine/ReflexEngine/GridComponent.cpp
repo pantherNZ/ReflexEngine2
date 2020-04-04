@@ -52,11 +52,11 @@ namespace Reflex::Components
 		return false;
 	}
 
-	void Grid::GetValues( std::unordered_map< std::string, std::string >& values ) const
+	void Grid::GetValues( std::vector< std::pair< std::string, std::string > >& values ) const
 	{
-		values["GridSize"] = Reflex::ToString( m_gridSize );
-		values["CellSize"] = Reflex::ToString( m_cellSize );
-		values["CentreGrid"] = Reflex::ToString( m_centreGrid );
+		values.emplace_back( "GridSize", Reflex::ToString( m_gridSize ) );
+		values.emplace_back( "CellSize", Reflex::ToString( m_cellSize ) );
+		values.emplace_back( "CentreGrid", Reflex::ToString( m_centreGrid ) );
 	}
 
 	void Grid::AddToGrid( const Reflex::Object& handle, const unsigned x, const unsigned y )

@@ -188,7 +188,7 @@ namespace Reflex::Core
 				continue;
 
 			Json::Value data;
-			std::unordered_map< std::string, std::string > values;
+			std::vector< std::pair< std::string, std::string > > values;
 			ObjectGetComponent( object, i )->GetValues( values );
 
 			for( const auto& value : values )

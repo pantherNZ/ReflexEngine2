@@ -6,6 +6,16 @@ namespace Reflex::Core
 {
 	size_t BaseEvent::typeCounter = 0;
 
+	EventTriggerer::EventTriggerer( EventManager& eventManager )
+		: eventManager( eventManager )
+	{
+	}
+
+	EventTriggerer::EventTriggerer( World& world )
+		: eventManager( world.GetEventManager() )
+	{
+	}
+
 	EventReceiver::~EventReceiver()
 	{
 		eventManager->Unsubscribe( *this );
@@ -13,6 +23,6 @@ namespace Reflex::Core
 
 	EventTriggerer::~EventTriggerer()
 	{
-		eventManager->RemoveTriggerer( *this );
+		eventManager.RemoveTriggerer( *this );
 	}
 }

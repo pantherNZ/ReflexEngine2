@@ -16,7 +16,7 @@ namespace Reflex::Components
 
 		using Component< Steering >::Component;
 		bool SetValue( const std::string& variable, const std::string& value ) override;
-		void GetValues( std::unordered_map< std::string, std::string >& values ) const override;
+		void GetValues( std::vector< std::pair< std::string, std::string > >& values ) const override;
 		static std::string GetComponentName() { return "Steering"; }
 
 		enum class Behaviours

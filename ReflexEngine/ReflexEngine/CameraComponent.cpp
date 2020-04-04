@@ -82,20 +82,20 @@ namespace Reflex::Components
 		return false;
 	}
 
-	void Camera::GetValues( std::unordered_map< std::string, std::string >& values ) const
+	void Camera::GetValues( std::vector< std::pair< std::string, std::string > >& values ) const
 	{
 		for( unsigned i = 0; i < std::size( flagNames ); ++i )
 			if( flags.test( i ) )
-				values[flagNames[i]] = "true";
+				values.emplace_back( flagNames[i], "true" );
 
 		if( !Reflex::IsDefault( panSpeed ) )
-			values["PanSpeed"] = Reflex::ToString( panSpeed );
+			values.emplace_back( "PanSpeed", Reflex::ToString( panSpeed ) );
 		if( !Reflex::IsDefault( panMouseMargin ) )
-			values["PanMouseMargin"] = Reflex::ToString( panMouseMargin );
+			values.emplace_back( "PanMouseMargin", Reflex::ToString( panMouseMargin ) );
 		if( followInterpSpeed )
-			values["FollowInterpSpeed"] = Reflex::ToString( followInterpSpeed );
+			values.emplace_back( "FollowInterpSpeed", Reflex::ToString( followInterpSpeed ) );
 		if( zoomScaleFactor )
-			values["ZoomScaleFactor"] = Reflex::ToString( zoomScaleFactor );
+			values.emplace_back( "ZoomScaleFactor", Reflex::ToString( zoomScaleFactor ) );
 	}
 
 	void Camera::OnConstructionComplete()

@@ -134,37 +134,64 @@ namespace Reflex::Components
 
 	bool SFMLObject::SetValue( const std::string& variable, const std::string& value )
 	{
+		if( variable == "Type" )
+		{
+			for( unsigned i = 0; i < std::size( objectNames ); ++i )
+			{
+				if( value == objectNames[i] )
+				{
+					m_type = SFMLObjectType( i );
+					return true;
+				}
+			}
+		}
+
 		return false;
 	}
 
-	void SFMLObject::GetValues( std::unordered_map< std::string, std::string >& values ) const
+	void SFMLObject::GetValues( std::vector< std::pair< std::string, std::string > >& values ) const
 	{
-		values["Type"] = objectNames[( size_t )m_type];
+		values.emplace_back( "Type", objectNames[( size_t )m_type] );
+
+		const auto GetShapeValues = [&values]( const sf::Shape& shape )
+		{
+			values.emplace_back( "PointCount", Reflex::ToString( shape.getPointCount() ) );
+			values.emplace_back( "Points", "" );
+			for( size_t i = 0; i < shape.getPointCount(); ++i )
+				values.back().second += ( i > 0 ? ", " : "" ) + Reflex::ToString( shape.getPoint( i ) );
+		};
 
 		switch( m_type )
 		{
-		case Reflex::Components::SFMLObjectType::Invalid:
-			break;
 		case Reflex::Components::SFMLObjectType::Circle:
-			GetShapeValues( values, GetCircleShape() );
+		{
+			values.emplace_back( "Radius", Reflex::ToString( GetCircleShape().getRadius() ) );
+			GetShapeValues( GetCircleShape() );
+			GetColourValues( values, GetCircleShape() );
 			break;
+		}
 		case Reflex::Components::SFMLObjectType::Rectangle:
-			GetShapeValues( values, GetRectangleShape() );
+			GetShapeValues( GetRectangleShape() );
+			GetColourValues( values, GetCircleShape() );
 			break;
 		case Reflex::Components::SFMLObjectType::Convex:
-			GetShapeValues( values, GetConvexShape() );
+			GetShapeValues( GetRectangleShape() );
+			GetColourValues( values, GetConvexShape() );
 			break;
 		case Reflex::Components::SFMLObjectType::Sprite:
 		{
 			if( !Reflex::IsDefault( GetSprite().getColor() ) )
-				values["Colour"] = Reflex::ToString( GetSprite().getColor() );
+				values.emplace_back( "Colour", Reflex::ToString( GetSprite().getColor() ) );
 			break;
 		}
 		case Reflex::Components::SFMLObjectType::Text:
 		{
-			GetShapeValues( values, GetText() );
+			GetColourValues( values, GetText() );
+			values.emplace_back( "String", GetText().getString() );
+			values.emplace_back( "Style", Reflex::ToString( GetText().getStyle() ) );
 			break;
 		}
+		case Reflex::Components::SFMLObjectType::Invalid:
 		case Reflex::Components::SFMLObjectType::NumTypes:
 			break;
 		}

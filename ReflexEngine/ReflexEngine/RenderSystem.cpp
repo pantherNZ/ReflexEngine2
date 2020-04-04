@@ -16,7 +16,7 @@ namespace Reflex::Systems
 
 	void RenderSystem::OnComponentAdded( const Reflex::Object& object )
 	{
-		GetWorld().GetEventManager().Subscribe< Components::Transform::RenderIndexChangedEvent >( *this, &RenderSystem::OnRenderIndexChanged );
+		object.GetTransform()->Subscribe< Components::Transform::RenderIndexChangedEvent >( *this, &RenderSystem::OnRenderIndexChanged );
 	}
 
 	void RenderSystem::OnRenderIndexChanged( const Components::Transform::RenderIndexChangedEvent& e )

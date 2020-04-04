@@ -16,7 +16,7 @@ namespace Reflex::Components
 		Interactable( const Reflex::Object& owner, const Reflex::Object& collisionObjectOverride = Reflex::Object() );
 
 		bool SetValue( const std::string& variable, const std::string& value ) override;
-		void GetValues( std::unordered_map< std::string, std::string >& values ) const override;
+		void GetValues( std::vector< std::pair< std::string, std::string > >& values ) const override;
 		static std::string GetComponentName() { return "Interactable"; }
 
 		// Settings, change as you want

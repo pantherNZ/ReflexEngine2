@@ -29,7 +29,7 @@ namespace Reflex::Components
 		~SFMLObject() { }
 
 		bool SetValue( const std::string& variable, const std::string& value ) override;
-		void GetValues( std::unordered_map< std::string, std::string >& values ) const override;
+		void GetValues( std::vector< std::pair< std::string, std::string > >& values ) const override;
 		static std::string GetComponentName() { return "SFMLObject"; }
 
 		// Get functions
@@ -51,13 +51,13 @@ namespace Reflex::Components
 		const SFMLObjectType GetType() const;
 
 		template< typename T >
-		void GetShapeValues( std::unordered_map< std::string, std::string >& values, const T& shape ) const
+		void GetColourValues( std::vector< std::pair< std::string, std::string > >& values, const T& shape ) const
 		{
 			if( !Reflex::IsDefault( shape.getFillColor() ) )
-				values["FillColour"] = Reflex::ToString( shape.getFillColor() );
+				values.emplace_back( "FillColour", Reflex::ToString( shape.getFillColor() ) );
 			if( !Reflex::IsDefault( shape.getOutlineColor() ) )
-				values["OutlineColour"] = Reflex::ToString( shape.getOutlineColor() );
-		};
+				values.emplace_back( "OutlineColour", Reflex::ToString( shape.getOutlineColor() ) );
+		}
 
 	private:
 		union ObjectType

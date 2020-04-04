@@ -52,6 +52,8 @@ protected:
 
 	struct SpecificEventTriggerer : public Reflex::Core::EventTriggerer
 	{
+		using Reflex::Core::EventTriggerer::EventTriggerer;
+
 		void Emit( Reflex::Core::EventManager& events, const int value )
 		{
 			events.Emit( *this, TestEvent{ value } );
@@ -70,7 +72,7 @@ protected:
 
 	bool TestEventGeneric()
 	{
-		SpecificEventTriggerer triggerer;
+		SpecificEventTriggerer triggerer( GetWorld() );
 		SpecificEventReceiver receiver;
 
 		GetWorld().GetEventManager().Subscribe< TestEvent >( receiver, &SpecificEventReceiver::OnTestEvent );
@@ -80,7 +82,7 @@ protected:
 
 	bool TestEventSpecific()
 	{
-		SpecificEventTriggerer triggerer;
+		SpecificEventTriggerer triggerer( GetWorld() );
 		SpecificEventReceiver receiver;
 
 		GetWorld().GetEventManager().Subscribe< TestEvent >( triggerer, receiver, &SpecificEventReceiver::OnTestEvent );
@@ -90,8 +92,8 @@ protected:
 
 	bool TestEventSpecific2()
 	{
-		SpecificEventTriggerer triggerer;
-		SpecificEventTriggerer triggerer2;
+		SpecificEventTriggerer triggerer( GetWorld() );
+		SpecificEventTriggerer triggerer2( GetWorld() );
 		SpecificEventReceiver receiver;
 
 		GetWorld().GetEventManager().Subscribe< TestEvent >( triggerer, receiver, &SpecificEventReceiver::OnTestEvent );
@@ -121,8 +123,8 @@ protected:
 
 	bool TestEventsMulti()
 	{
-		SpecificEventTriggerer triggerer;
-		SpecificEventTriggerer triggerer2;
+		SpecificEventTriggerer triggerer( GetWorld() );
+		SpecificEventTriggerer triggerer2( GetWorld() );
 		SpecificEventReceiver receiver;
 
 		GetWorld().GetEventManager().Subscribe< TestEvent >( triggerer, receiver, &SpecificEventReceiver::OnTestEvent );
