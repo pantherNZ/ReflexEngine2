@@ -37,7 +37,7 @@ namespace Reflex::Core
 		Object CreateObject( const sf::Vector2f& position = sf::Vector2f(), const float rotation = 0.0f, const sf::Vector2f & scale = sf::Vector2f( 1.0f, 1.0f ), const bool attachToRoot = true );
 		Object CreateObject( const std::string& objectFile, const sf::Vector2f& position = sf::Vector2f(), const float rotation = 0.0f, const sf::Vector2f & scale = sf::Vector2f( 1.0f, 1.0f ), const bool attachToRoot = true );
 
-		void DestroyObject( Object object );
+		void DestroyObject( const Object& object );
 		void DestroyAllObjects();
 
 		bool IsValidObject( const Object& object ) const;
@@ -109,7 +109,7 @@ namespace Reflex::Core
 		sf::Vector2f GetMousePosition( const Reflex::Handle< Reflex::Components::Camera >& camera = Reflex::Handle< Reflex::Components::Camera >() ) const;
 		sf::Vector2f RandomWindowPosition( const float margin = 0.0f ) const;
 
-		//void TriggerGameEvent( const Event&)
+		std::vector< Object > GetObjects();
 
 	protected:
 		void Setup();

@@ -242,15 +242,15 @@ namespace Reflex::Core
 		return m_objects.components[object.GetIndex()].test( family );
 	}
 
-	void World::DestroyObject( Object object )
+	void World::DestroyObject( const Object& object )
 	{
 		if( IsObjectFlagSet( object, ObjectFlags::Deleted ) )
 			return;
 
-		m_objects.counters[object.GetIndex()]++;
-		m_objects.components[object.GetIndex()] = 0;
+		ObjectRemoveAllComponents( object );
 		m_objects.flags[object.GetIndex()] = 0;
 		SetObjectFlag( object, ObjectFlags::Deleted );
+		m_objects.counters[object.GetIndex()]++;
 	}
 
 	void World::DestroyAllObjects()
@@ -297,6 +297,7 @@ namespace Reflex::Core
 	{
 		assert( IsValidObject( object ) );
 		m_objects.components[object.GetIndex()].reset();
+		OnComponentRemoved( object );
 	}
 
 	sf::FloatRect World::GetBounds() const
@@ -339,8 +340,8 @@ namespace Reflex::Core
 			if( found == system.second->m_releventObjects.end() )
 				continue;
 
-			system.second->m_releventObjects.erase( found );
 			system.second->OnComponentRemoved( *found );
+			system.second->m_releventObjects.erase( found );
 		}
 	}
 
@@ -380,4 +381,15 @@ namespace Reflex::Core
 			Reflex::RandomFloat( margin, GetWindow().getSize().y - margin * 2.0f ) );
 	}
 
+	std::vector< Object > World::GetObjects()
+	{
+		std::vector< Object > output;
+		output.reserve( m_objects.flags.size() );
+
+		for( unsigned i = 1; i < m_objects.flags.size(); ++i )
+			if( !IsObjectFlagSet( i, ObjectFlags::Deleted ) )
+				output.push_back( ObjectFromIndex( i ) );
+
+		return output;
+	}
 }

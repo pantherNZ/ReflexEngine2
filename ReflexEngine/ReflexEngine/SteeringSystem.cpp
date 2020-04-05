@@ -92,16 +92,16 @@ namespace Reflex::Systems
 		return Seek( boid, steeringPos );
 	}
 
-	sf::Vector2f SteeringSystem::Pursue( const Steering::Handle& boid, const Object& target ) const
+	sf::Vector2f SteeringSystem::Pursue( const Steering::Handle& boid, const Object& target, const bool useArrival ) const
 	{
 		const auto speed = Reflex::GetMagnitude( boid->GetObject().GetTransform()->GetVelocity() );
 		const auto time = speed <= 0.0001f ? 0.0f : ( Reflex::GetDistance( boid->GetTransform()->getPosition(), target.GetTransform()->getPosition() ) / speed );
 		const auto targetPos = target.GetTransform()->getPosition() + target.GetTransform()->GetVelocity() * time;
-		return Seek( boid, targetPos );
+		return useArrival ? Arrival( boid, targetPos ) : Seek( boid, targetPos );
 	}
 
 	sf::Vector2f SteeringSystem::Evade( const Steering::Handle& boid, const Object& target ) const
 	{
-		return -Pursue( boid, target );
+		return -Pursue( boid, target, false );
 	}
 }

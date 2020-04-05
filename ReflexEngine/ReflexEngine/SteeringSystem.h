@@ -23,7 +23,7 @@ namespace Reflex::Systems
 		sf::Vector2f Flee( const Steering::Handle& boid, const sf::Vector2f& target ) const;
 		sf::Vector2f Arrival( const Steering::Handle& boid, const sf::Vector2f& target ) const;
 		sf::Vector2f Wander( const Steering::Handle& boid ) const;
-		sf::Vector2f Pursue( const Steering::Handle& boid, const Object& target ) const;
+		sf::Vector2f Pursue( const Steering::Handle& boid, const Object& target, const bool useArrival = true ) const;
 		sf::Vector2f Evade( const Steering::Handle& boid, const Object& target ) const;
 	};
 }

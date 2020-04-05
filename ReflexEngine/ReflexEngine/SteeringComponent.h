@@ -34,9 +34,10 @@ namespace Reflex::Components
 		void Flee( const sf::Vector2f& target, const float maxVelocity );
 		void Arrival( const sf::Vector2f& target, const float slowingRadius, const float maxVelocity );
 		void Wander( const float circleRadius, const float crcleDistance, const float angleDelta, const float maxVelocity );
-		void Pursue( const Reflex::Object& target, const float maxVelocity );
+		void Pursue( const Reflex::Object& target, const float slowingRadius, const float maxVelocity );
 		void Evade( const Reflex::Object& target, const float maxVelocity );
 		void DisableBehaviour( const Behaviours behaviour );
+		void ClearBehaviours();
 		bool IsBehaviourSet( const Behaviours behaviour ) const;
 		void SetMaxForce( const float force );
 		void SetMass( const float newMass );

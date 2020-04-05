@@ -119,10 +119,11 @@ namespace Reflex::Components
 		GetObject().GetTransform()->SetMaxVelocity( maxVelocity );
 	}
 
-	void Steering::Pursue( const Reflex::Object& target, const float maxVelocity )
+	void Steering::Pursue( const Reflex::Object& target, const float slowingRadius, const float maxVelocity )
 	{
 		SetBehaviourInternal( Behaviours::Pursue );
 		m_targetObject = target;
+		m_slowingRadius = slowingRadius;
 		GetObject().GetTransform()->SetMaxVelocity( maxVelocity );
 	}
 
@@ -135,8 +136,13 @@ namespace Reflex::Components
 
 	void Steering::DisableBehaviour( const Behaviours behaviour )
 	{ 
-		if( (size_t )behaviour >= 0 && ( size_t )behaviour < ( size_t )Behaviours::NumBehaviours )
+		if( ( size_t )behaviour >= 0 && ( size_t )behaviour < ( size_t )Behaviours::NumBehaviours )
 			m_behaviours.reset( ( size_t )behaviour );
+	}
+
+	void Steering::ClearBehaviours()
+	{
+		m_behaviours.reset();
 	}
 
 	void Steering::SetMaxForce( const float force ) 
