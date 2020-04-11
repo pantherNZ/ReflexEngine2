@@ -2,6 +2,7 @@
 #include "SceneNode.h"
 #include "Object.h"
 #include "TransformComponent.h"
+#include "Logging.h"
 
 namespace Reflex::Core
 {

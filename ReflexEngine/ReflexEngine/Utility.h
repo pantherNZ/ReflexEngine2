@@ -567,4 +567,30 @@ namespace Reflex
 	private:
 		WORD savedAttributes = 0;
 	};
+
+	// Hash stuff
+	template <typename T, typename... Rest>
+	void HashCombine( std::size_t& seed, const T& v, const Rest& ... rest )
+	{
+		seed ^= std::hash<T>{}(v ) + 0x9e3779b9 + ( seed << 6 ) + ( seed >> 2 );
+		( HashCombine( seed, rest ), ... );
+	}
+
+#define MAKE_HASHABLE( type, ... ) \
+    namespace std \
+	{ \
+        template<> struct hash<type> \
+		{ \
+            std::size_t operator()( const type& t) const \
+			{ \
+                std::size_t ret = 0; \
+                Reflex::HashCombine( ret, __VA_ARGS__ ); \
+                return ret; \
+            } \
+        }; \
+    }
 }
+
+MAKE_HASHABLE( sf::Vector2f, t.x, t.y )
+MAKE_HASHABLE( sf::Vector2i, t.x, t.y )
+MAKE_HASHABLE( sf::Vector2u, t.x, t.y )

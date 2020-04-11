@@ -3,10 +3,12 @@
 #include "Precompiled.h"
 #include "ResourceManager.h"
 #include "Context.h"
-#include "System.h"
+#include "BaseSystem.h"
 #include "ComponentAllocator.h"
-#include "Object.h"
 #include "EventManager.h"
+#include "TileMap.h"
+#include "BaseObject.h"
+#include "Component.h"
 
 // Engine class
 namespace Reflex 
@@ -27,6 +29,7 @@ namespace Reflex::Core
 	{
 	public:
 		explicit World( Context context, sf::FloatRect worldBounds );
+		~World();
 
 		void Update( const float deltaTime );
 		void ProcessEvent( const sf::Event& event );
@@ -37,38 +40,39 @@ namespace Reflex::Core
 		Object CreateObject( const sf::Vector2f& position = sf::Vector2f(), const float rotation = 0.0f, const sf::Vector2f & scale = sf::Vector2f( 1.0f, 1.0f ), const bool attachToRoot = true );
 		Object CreateObject( const std::string& objectFile, const sf::Vector2f& position = sf::Vector2f(), const float rotation = 0.0f, const sf::Vector2f & scale = sf::Vector2f( 1.0f, 1.0f ), const bool attachToRoot = true );
 
-		void DestroyObject( const Object& object );
+		void DestroyObject( const BaseObject& object );
 		void DestroyAllObjects();
 
-		bool IsValidObject( const Object& object ) const;
-		bool IsObjectFlagSet( const Object& object, const ObjectFlags flag ) const;
-		void SetObjectFlag( const Object& object, const ObjectFlags flag );
+		bool IsValidObject( const BaseObject& object ) const;
+		bool IsObjectFlagSet( const BaseObject& object, const ObjectFlags flag ) const;
+		void SetObjectFlag( const BaseObject& object, const ObjectFlags flag );
 		/*---------------*/
 
 		/* Component functions*/
 		template< class T, typename... Args >
-		Handle< T > ObjectAddComponent( const Object& object, Args&& ... args );
+		T* ObjectAddComponent( const BaseObject& object, Args&& ... args );
 
 		// Adds an empty component (no args passed, non templated) - Used to add components from .ro files
 		Reflex::Components::BaseComponent* ObjectAddEmptyComponent( const Object& object, const size_t family );
 
 		template< class T >
-		T* ObjectGetComponent( const Object& object ) const;
+		T* ObjectGetComponent( const BaseObject& object ) const;
 
-		Reflex::Components::BaseComponent* ObjectGetComponent( const Object& object, const size_t family ) const;
+		Reflex::Components::BaseComponent* ObjectGetComponent( const BaseObject& object, const size_t family ) const;
 
-		ComponentsMask ObjectGetComponentFlags( const Object& object ) const;
+		ComponentsMask ObjectGetComponentFlags( const BaseObject& object ) const;
 
 		// Returns true if a component was removed
 		template< class T >
-		bool ObjectRemoveComponent( const Object& object );
+		bool ObjectRemoveComponent( const BaseObject& object );
 
-		void ObjectRemoveAllComponents( const Object& object );
+		bool ObjectRemoveComponent( const BaseObject& object, const size_t family );
+		void ObjectRemoveAllComponents( const BaseObject& object );
 
 		template< class T >
-		bool ObjectHasComponent( const Object& object ) const;
+		bool ObjectHasComponent( const BaseObject& object ) const;
 
-		bool ObjectHasComponent( const Object& object, const size_t family ) const;
+		bool ObjectHasComponent( const BaseObject& object, const size_t family ) const;
 
 		// Returns true if the register resulted in a new component being allocated
 		template< class T >
@@ -87,26 +91,28 @@ namespace Reflex::Core
 		/*---------------*/
 
 		// Utility and helper functions
-		template< typename Func >
-		void ForEachObject( Func function );
+		//template< typename Func >
+		//void ForEachObject( Func function );
 
 		sf::RenderWindow& GetWindow() { return m_context.window; }
 		const sf::RenderWindow& GetWindow() const { return m_context.window; }
 		TextureManager& GetTextureManager() { return m_context.textureManager; }
 		FontManager& GetFontManager() { return m_context.fontManager; }
 		EventManager& GetEventManager() { return eventManager; }
+		TileMap& GetTileMap() { return m_tileMap; }
 
 		sf::FloatRect GetBounds() const;
 		Reflex::Handle< Reflex::Components::Transform > GetSceneRoot() const;
 
-		void OnComponentAdded( const Object& object );
-		void OnComponentRemoved( const Object& object );
+		void OnComponentAdded( const BaseObject& object );
+		void OnComponentRemoved( const BaseObject& object );
 
 		bool IsActiveCamera( const Reflex::Handle< Reflex::Components::Camera >& camera ) const;
 		void SetActiveCamera( const Reflex::Handle< Reflex::Components::Camera >& camera );
-		Reflex::Handle< Reflex::Components::Camera > GetActiveCamera() const { return m_activeCamera; }
+		Reflex::Handle< Reflex::Components::Camera > GetActiveCamera() const;
 
-		sf::Vector2f GetMousePosition( const Reflex::Handle< Reflex::Components::Camera >& camera = Reflex::Handle< Reflex::Components::Camera >() ) const;
+		sf::Vector2f GetMousePosition() const;
+		sf::Vector2f GetMousePosition( const Reflex::Handle< Reflex::Components::Camera >& camera ) const;
 		sf::Vector2f RandomWindowPosition( const float margin = 0.0f ) const;
 
 		std::vector< Object > GetObjects();
@@ -125,7 +131,12 @@ namespace Reflex::Core
 		Context m_context;
 		sf::View m_worldView;
 		sf::FloatRect m_worldBounds;
+
+		// Handler for event system
 		EventManager eventManager;
+
+		// Tilemap which stores object handles in the world in an efficient spacial hash map
+		TileMap m_tileMap;
 
 		// Object data
 		struct ObjectData
@@ -145,17 +156,15 @@ namespace Reflex::Core
 		std::queue< unsigned > m_freeList;
 
 		// List of systems, indexed by their type, storage for all systems
-		std::unordered_map< Type, std::unique_ptr< Reflex::Systems::System > > m_systems;
+		std::unordered_map< Type, std::unique_ptr< Reflex::Systems::BaseSystem > > m_systems;
 
-		// Tilemap which stores object handles in the world in an efficient spacial hash map
-		//TileMap m_tileMap;
-		Object m_sceneGraphRoot;
-		Object m_activeCamera;
+		BaseObject m_sceneGraphRoot;
+		BaseObject m_activeCamera;
 	};
 
 	// Template functions
 	template< class T, typename... Args >
-	Handle< T >  World::ObjectAddComponent( const Object& object, Args&& ... args )
+	T* World::ObjectAddComponent( const BaseObject& object, Args&& ... args )
 	{
 		const auto family = T::GetFamily();
 
@@ -178,32 +187,23 @@ namespace Reflex::Core
 		m_objects.components[object.GetIndex()].set( family );
 		OnComponentAdded( object );
 		newComponent->OnConstructionComplete();
-		return Handle< T >( object );
+		return newComponent;
 	}
 
 	template< class T >
-	T* World::ObjectGetComponent( const Object& object ) const
+	T* World::ObjectGetComponent( const BaseObject& object ) const
 	{
-		return static_cast< T* >( ObjectGetComponent( object, T::GetFamily() ) );
+		return static_cast< T* >( ObjectGetComponent( object, ( size_t )T::GetFamily() ) );
 	}
 
 	template< class T >
-	bool World::ObjectRemoveComponent( const Object& object )
+	bool World::ObjectRemoveComponent( const BaseObject& object )
 	{
-		assert( IsValidObject( object ) );
-		const auto family = T::GetFamily();
-
-		if( !ObjectHasComponent< T >( object ) )
-			return false;
-
-		m_objects.components[object.GetIndex()].reset( family );
-		static_cast< ComponentAllocator< T >* >( m_components[family].get() )->Destroy( object.GetIndex() );
-		OnComponentRemoved( object );
-		return true;
+		return ObjectRemoveComponent( object, ( size_t )T::GetFamily() );
 	}
 
 	template< class T >
-	bool World::ObjectHasComponent( const Object& object ) const
+	bool World::ObjectHasComponent( const BaseObject& object ) const
 	{
 		return ObjectHasComponent( object, ( size_t )T::GetFamily() );
 	}
@@ -288,16 +288,15 @@ namespace Reflex::Core
 
 		for( auto iter = m_systems.begin(); iter != m_systems.end(); ++iter )
 			if( systemType == iter->first )
-				return (T* )iter->second.get();
+				return ( T* )iter->second.get();
 
 		return nullptr;
 	}
 
-
-	template< typename Func >
-	void World::ForEachObject( Func function )
-	{
-		for( unsigned i = 1; i < m_objects.counters.size(); ++i )
-			function( Reflex::Object( *this, i, m_objects.counters[i] ) );
-	}
+	//template< typename Func >
+	//void World::ForEachObject( Func function )
+	//{
+	//	for( unsigned i = 1; i < m_objects.counters.size(); ++i )
+	//		function( Reflex::Object( *this, i, m_objects.counters[i] ) );
+	//}
 }

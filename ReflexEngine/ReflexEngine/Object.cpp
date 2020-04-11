@@ -7,15 +7,20 @@
 namespace Reflex
 {
 	Object::Object( const Object& other )
-		: m_world( other.m_world )
-		, m_counter( other.m_counter )
-		, m_index( other.m_index )
-	{ }
+		: BaseObject( other )
+	{ 
+	}
+
+	Object::Object( const BaseObject& base )
+		: BaseObject( base )
+	{
+	}
 
 	// Constructor can only be called by World
 	Object::Object( Reflex::Core::World& world, const uint32_t index, const uint32_t counter )
-		: m_index( index ), m_counter( counter ), m_world( &world )
-	{ }
+		: BaseObject( world, index, counter )
+	{ 
+	}
 
 	void Object::Destroy()
 	{
@@ -51,15 +56,5 @@ namespace Reflex
 	Object::operator bool() const
 	{
 		return IsValid();
-	}
-
-	bool Object::operator==( const Object& other ) const
-	{
-		return GetIndex() == other.GetIndex() && GetCounter() == other.GetCounter();
-	}
-
-	bool Object::operator!=( const Object& other ) const
-	{
-		return !( *this == other );
 	}
 }

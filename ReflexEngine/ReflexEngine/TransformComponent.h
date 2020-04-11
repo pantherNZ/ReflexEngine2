@@ -3,6 +3,7 @@
 #include "Component.h"
 #include "SceneNode.h"
 #include "MovementSystem.h"
+#include "EventManager.h"
 
 namespace Reflex::Components
 {
@@ -16,6 +17,7 @@ namespace Reflex::Components
 
 		Transform( const Reflex::Object& owner, const sf::Vector2f& position = sf::Vector2f(), const float rotation = 0.0f, const sf::Vector2f & scale = sf::Vector2f( 1.0f, 1.0f ) );
 		Transform( const Transform& other );
+		~Transform();
 
 		bool SetValue( const std::string& variable, const std::string& value ) override;
 		void GetValues( std::vector< std::pair< std::string, std::string > >& values ) const override;

@@ -7,20 +7,20 @@ namespace Reflex::Components
 	ComponentFamily BaseComponent::s_componentFamilyIdx = 0;
 
 	BaseComponent::BaseComponent( const Object& object )
-		: m_object( std::make_unique< Reflex::Object >( object ) )
+		: m_object( object )
 	{
 
 	}
 
 	BaseComponent::BaseComponent( const BaseComponent& other )
-		: m_object( std::make_unique< Reflex::Object >( *other.m_object ) )
+		: m_object( other.m_object )
 	{
 
 	}
 
 	Reflex::Object BaseComponent::GetObject() const
 	{
-		return *m_object;
+		return m_object;
 	}
 
 	Reflex::Handle< Transform > BaseComponent::GetTransform() const

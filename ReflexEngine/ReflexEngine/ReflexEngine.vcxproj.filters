@@ -90,9 +90,6 @@
     <ClInclude Include="RenderSystem.h">
       <Filter>Systems</Filter>
     </ClInclude>
-    <ClInclude Include="TileMap.h">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="IMGUI\imgui.h">
       <Filter>IMGUI</Filter>
     </ClInclude>
@@ -138,14 +135,20 @@
     <ClInclude Include="ComponentAllocator.h">
       <Filter>Memory</Filter>
     </ClInclude>
-    <ClInclude Include="ObjectTemplate.hpp">
-      <Filter>Objects</Filter>
-    </ClInclude>
     <ClInclude Include="Include.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="EventManager.h">
       <Filter>Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="TileMap.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseObject.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSystem.h">
+      <Filter>Systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -194,9 +197,6 @@
     <ClCompile Include="RenderSystem.cpp">
       <Filter>Systems</Filter>
     </ClCompile>
-    <ClCompile Include="TileMap.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="IMGUI\imgui_demo.cpp">
       <Filter>IMGUI</Filter>
     </ClCompile>
@@ -232,6 +232,9 @@
     </ClCompile>
     <ClCompile Include="EventManager.cpp">
       <Filter>Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="TileMap.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

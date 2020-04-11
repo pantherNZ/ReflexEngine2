@@ -18,7 +18,8 @@ namespace Reflex::Core
 
 	EventReceiver::~EventReceiver()
 	{
-		eventManager->Unsubscribe( *this );
+		if( eventManager )
+			eventManager->Unsubscribe( *this );
 	}
 
 	EventTriggerer::~EventTriggerer()

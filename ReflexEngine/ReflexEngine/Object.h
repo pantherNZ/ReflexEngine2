@@ -2,6 +2,8 @@
 
 #include "Precompiled.h"
 #include "Component.h"
+#include "BaseObject.h"
+#include "World.h"
 
 namespace Reflex::Core
 {
@@ -10,19 +12,7 @@ namespace Reflex::Core
 
 namespace Reflex
 {
-	template< class T >
-	class Handle;
-
-	namespace Components { class Transform; }
-
-	enum class ObjectFlags
-	{
-		Deleted,
-		ConstructionComplete,
-		NumFlags,
-	};
-
-	class Object
+	class Object : public BaseObject
 	{
 	public:
 		friend class Reflex::Core::World;
@@ -30,6 +20,7 @@ namespace Reflex
 		// This constructor is only used to create null / invalid objects
 		Object() { }
 		Object( const Object& other );
+		Object( const BaseObject& base );
 		virtual ~Object() { }
 
 		void Destroy();
@@ -63,15 +54,10 @@ namespace Reflex
 		//void CopyComponentsFrom( const Object& other );
 
 		Reflex::Core::World& GetWorld() const;
-		//const Reflex::Core::World& GetWorld() const;
-		std::uint32_t GetIndex() const { return m_index; }
-		std::uint32_t GetCounter() const { return m_counter; }
 		bool IsFlagSet( const ObjectFlags flag ) const;
 
 		bool IsValid() const;
 		explicit operator bool() const;
-		bool operator==( const Object& other ) const;
-		bool operator!=( const Object& other ) const;
 
 	protected:
 		//template< typename T, typename... Args >
@@ -83,11 +69,6 @@ namespace Reflex
 
 		// Constructor can only be called by World
 		Object( Reflex::Core::World& world, const uint32_t index, const uint32_t counter );
-
-	protected:
-		Reflex::Core::World* m_world = nullptr;
-		std::uint32_t m_index = -1;
-		std::uint32_t m_counter = -1;
 	};
 
 	template< class T >
@@ -110,6 +91,93 @@ namespace Reflex
 
 		Object object;
 	};
+
+	// Template definitions
+	template< class T, typename... Args >
+	Handle< T > Object::AddComponent( Args&& ... args )
+	{
+		GetWorld().template ObjectAddComponent< T >( *this, std::forward<Args>( args )... );
+		return Handle< T >( *this );
+	}
+
+	template< class T >
+	bool Object::RemoveComponent()
+	{
+		return GetWorld().template ObjectRemoveComponent< T >( *this );
+	}
+
+	template< class T >
+	bool Object::HasComponent() const
+	{
+		return GetWorld().template ObjectHasComponent< T >( *this );
+	}
+
+	template< class T >
+	Handle< T > Object::GetComponent() const
+	{
+		assert( IsValid() );
+		if( !HasComponent< T >() )
+			return { };
+		return Handle< T >( *this );
+	}
+
+	//template< typename... Args >
+	//void Object::CopyComponentsFrom( const Object& other )
+	//{
+	//	CopyComponentsFromInternal< Args... >( other );
+	//}
+	//
+	//template< typename T, typename... Args >
+	//void Object::CopyComponentsFromInternal( const Object& other )
+	//{
+	//	RemoveAllComponents();
+	//
+	//	auto component = other.GetComponent< T >();
+	//
+	//	if( component )
+	//		AddComponent< T >( *component.Get() );
+	//
+	//	// Recursively pop arguments off the variadic template args and continue
+	//	CopyComponentsFrom< Args... >( other );
+	//}
+
+	template< class T >
+	T* Handle< T >::Get() const
+	{
+		assert( object.IsValid() );
+		return object.GetWorld().template ObjectGetComponent< T >( object );
+	}
+
+	template< class T >
+	bool Handle< T >::IsValid() const
+	{
+		return object.IsValid() && object.HasComponent< T >();
+	}
+
+	template< class T >
+	bool Handle< T >::operator==( const Handle< T >& other ) const
+	{
+		return object == other.object;
+	}
+
+	template< class T >
+	bool Handle< T >::operator!=( const Handle< T >& other ) const
+	{
+		return !( *this == other );
+	}
 }
 
-#include "ObjectTemplate.hpp"
+// Hash function for handles allows it to be used with hash maps such as std::unordered_map etc.
+MAKE_HASHABLE( Reflex::Object, t.GetIndex(), t.GetCounter() )
+
+namespace std
+{
+	template< class T >
+	struct hash< Reflex::Handle< T > >
+	{
+		std::size_t operator()( const Reflex::Handle< T >& handle ) const
+		{
+			return hash< Reflex::Object >()( handle.object ) ^ ( hash< Reflex::ComponentFamily >()( T::GetFamily() ) + 0x9e3779b9 );
+		}
+	};
+}

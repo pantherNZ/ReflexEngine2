@@ -27,6 +27,9 @@ namespace Reflex::Components
 			Wander,
 			Pursue,
 			Evade,
+			Alignment,
+			Cohesion,
+			Separation,
 			NumBehaviours,
 		};
 
@@ -35,7 +38,13 @@ namespace Reflex::Components
 		void Arrival( const sf::Vector2f& target, const float slowingRadius, const float maxVelocity );
 		void Wander( const float circleRadius, const float crcleDistance, const float angleDelta, const float maxVelocity );
 		void Pursue( const Reflex::Object& target, const float slowingRadius, const float maxVelocity );
-		void Evade( const Reflex::Object& target, const float maxVelocity );
+		void Evade( const Reflex::Object& target, const float ignoreDistance, const float maxVelocity );
+		
+		void Alignment( const float neighbourRange, const float alignmentForce, const float maxVelocity );
+		void Cohesion( const float neighbourRange, const float cohesionForce, const float maxVelocity );
+		void Separation( const float neighbourRange, const float separationForce, const float maxVelocity );
+		void Flocking( const float neighbourRange, const float alignmentForce, const float cohesionForce, const float separationForce, const float maxVelocity );
+		
 		void DisableBehaviour( const Behaviours behaviour );
 		void ClearBehaviours();
 		bool IsBehaviourSet( const Behaviours behaviour ) const;
@@ -58,10 +67,19 @@ namespace Reflex::Components
 		// Arrival
 		float m_slowingRadius = 100.0f;
 
+		// Seek / Flee
+		float m_ignoreDistance = 0.0f;
+
 		// Wander
 		float m_wanderCircleRadius = 10.0f;
 		float m_wanderCircleDistance = 10.0f;
 		float m_wanderAngleDelta = 1.0f;
 		float m_currentWanderAngle = 0.0f;
+
+		// Alignment / Cohesion / Separation
+		float m_neighbourRange = 300.0f;
+		float m_alignmentForce = 1.0f;
+		float m_cohesionForce = 1.0f; 
+		float m_separationForce = 1.0f;;
 	};
 }

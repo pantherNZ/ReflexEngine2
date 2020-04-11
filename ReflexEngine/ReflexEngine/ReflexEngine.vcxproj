@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BaseObject.h" />
+    <ClInclude Include="BaseSystem.h" />
     <ClInclude Include="CameraComponent.h" />
     <ClInclude Include="CameraSystem.h" />
     <ClInclude Include="Component.h" />
@@ -42,7 +44,6 @@
     <ClInclude Include="Logging.h" />
     <ClInclude Include="MovementSystem.h" />
     <ClInclude Include="Object.h" />
-    <ClInclude Include="ObjectTemplate.hpp" />
     <ClInclude Include="Precompiled.h" />
     <ClInclude Include="RenderSystem.h" />
     <ClInclude Include="ResourceManager.h" />
@@ -223,6 +224,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Precompiled.h</PrecompiledHeaderFile>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Precompiled.h</PrecompiledHeaderFile>
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</PreprocessToFile>
     </ClCompile>
   </ItemGroup>
   <PropertyGroup Label="Globals">

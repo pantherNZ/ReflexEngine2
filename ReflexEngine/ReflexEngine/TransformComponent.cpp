@@ -13,7 +13,7 @@ namespace Reflex::Components
 		, EventTriggerer( GetWorld() )
 	{
 		assert( scale.x != 0.0f || scale.y != 0.0f );
-		sf::Transformable::setPosition( position );
+		setPosition( position );
 		setRotation( rotation );
 		setScale( scale );
 	}
@@ -27,6 +27,12 @@ namespace Reflex::Components
 		, m_finishedRotationCallback( other.m_finishedRotationCallback )
 	{
 
+	}
+
+	Transform::~Transform()
+	{
+		//auto& tileMap = m_object->GetWorld().GetTileMap();
+		//tileMap.Remove( Component::GetObject() );
 	}
 
 	bool Transform::SetValue( const std::string& variable, const std::string& value )
@@ -69,17 +75,17 @@ namespace Reflex::Components
 
 	void Transform::setPosition( const sf::Vector2f& position )
 	{
-		//auto& tileMap = m_object->GetWorld().GetTileMap();
-		//const auto previousID = tileMap.GetID( m_object );
+		//auto& tileMap = GetWorld().GetTileMap();
+		//const auto previousID = tileMap.GetCellId( Component::GetObject() );
 
 		sf::Transformable::setPosition( position );
 
-		//const auto newID = tileMap.GetID( m_object );
+		//const auto newID = tileMap.GetCellId( Component::GetObject() );
 		//
 		//if( previousID != newID )
 		//{
-		//	tileMap.RemoveByID( m_object, previousID );
-		//	tileMap.Insert( m_object );
+		//	tileMap.Remove( Component::GetObject() );
+		//	tileMap.Insert( Component::GetObject() );
 		//}
 	}
 

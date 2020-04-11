@@ -2,6 +2,7 @@
 
 #include "World.h"
 #include "Object.h"
+#include "System.h"
 
 #include "TransformComponent.h"
 #include "CameraComponent.h"
@@ -21,9 +22,14 @@ namespace Reflex::Core
 		: m_context( context )
 		, m_worldView( context.window.getDefaultView() )
 		, m_worldBounds( worldBounds )
-		//, m_tileMap( m_worldBounds )
+		, m_tileMap( 100, 10 )
 	{
 		Setup();
+	}
+
+	World::~World()
+	{
+		DestroyAllObjects();
 	}
 
 	void World::Setup()
@@ -62,7 +68,8 @@ namespace Reflex::Core
 	void World::Render()
 	{
 		PROFILE;
-		GetWindow().setView( m_activeCamera ? *m_activeCamera.GetComponent< Reflex::Components::Camera >() : m_worldView );
+		const auto camera = GetActiveCamera();
+		GetWindow().setView( camera ? *camera : m_worldView );
 
 		for( auto& system : m_systems )
 		{
@@ -98,8 +105,8 @@ namespace Reflex::Core
 
 		if( attachToRoot )
 		{
-			assert( m_sceneGraphRoot.IsValid() );
-			m_sceneGraphRoot.GetTransform()->AttachChild( newObject );
+			assert( GetSceneRoot().IsValid() );
+			GetSceneRoot()->AttachChild( newObject );
 		}
 
 		SetObjectFlag( newObject, ObjectFlags::ConstructionComplete );
@@ -222,14 +229,14 @@ namespace Reflex::Core
 		m_components[family]->ExpandToFit( object.GetIndex() + 1 );
 
 		//std::static_pointer_cast< 
-		auto* newComponent = static_cast< Reflex::Components::BaseComponent* >( m_components[family].get()->ConstructEmpty( object.GetIndex(), object ) );
+		auto* newComponent = static_cast< Reflex::Components::BaseComponent* >( m_components[family].get()->ConstructEmpty( object.GetIndex(), ( Object )object ) );
 		m_objects.components[object.GetIndex()].set( family );
 		OnComponentAdded( object );
 		newComponent->OnConstructionComplete();
 		return newComponent;
 	}
 
-	Reflex::Components::BaseComponent* World::ObjectGetComponent( const Object& object, const size_t family ) const
+	Reflex::Components::BaseComponent* World::ObjectGetComponent( const BaseObject& object, const size_t family ) const
 	{
 		assert( IsValidObject( object ) );
 		if( !ObjectHasComponent( object, family ) )
@@ -237,12 +244,25 @@ namespace Reflex::Core
 		return static_cast< Reflex::Components::BaseComponent* >( m_components[family]->Get( object.GetIndex() ) );
 	}
 
-	bool World::ObjectHasComponent( const Object& object, const size_t family ) const
+	bool World::ObjectRemoveComponent( const BaseObject& object, const size_t family )
+	{
+		assert( IsValidObject( object ) );
+
+		if( !ObjectHasComponent( object, family ) )
+			return false;
+
+		m_objects.components[object.GetIndex()].reset( family );
+		 m_components[family].get()->Destroy( object.GetIndex() );
+		OnComponentRemoved( object );
+		return true;
+	}
+
+	bool World::ObjectHasComponent( const BaseObject& object, const size_t family ) const
 	{
 		return m_objects.components[object.GetIndex()].test( family );
 	}
 
-	void World::DestroyObject( const Object& object )
+	void World::DestroyObject( const BaseObject& object )
 	{
 		if( IsObjectFlagSet( object, ObjectFlags::Deleted ) )
 			return;
@@ -260,12 +280,12 @@ namespace Reflex::Core
 				DestroyObject( ObjectFromIndex( i ) );
 	}
 
-	bool World::IsValidObject( const Object& object ) const
+	bool World::IsValidObject( const BaseObject& object ) const
 	{
 		return object.GetIndex() < m_objects.counters.size() && object.GetCounter() == m_objects.counters[object.GetIndex()];
 	}
 
-	bool World::IsObjectFlagSet( const Object& object, const ObjectFlags flag ) const
+	bool World::IsObjectFlagSet( const BaseObject& object, const ObjectFlags flag ) const
 	{
 		assert( IsValidObject( object ) );
 		return IsObjectFlagSet( object.GetIndex(), flag );
@@ -276,7 +296,7 @@ namespace Reflex::Core
 		return m_objects.flags[objectIndex].test( (size_t )flag );
 	}
 
-	void World::SetObjectFlag( const Object& object, const ObjectFlags flag )
+	void World::SetObjectFlag( const BaseObject& object, const ObjectFlags flag )
 	{
 		assert( IsValidObject( object ) );
 		SetObjectFlag( object.GetIndex(), flag );
@@ -287,17 +307,19 @@ namespace Reflex::Core
 		m_objects.flags[objectIndex].set( (size_t )flag );
 	}
 
-	Reflex::ComponentsMask World::ObjectGetComponentFlags( const Object& object ) const
+	Reflex::ComponentsMask World::ObjectGetComponentFlags( const BaseObject& object ) const
 	{
 		assert( IsValidObject( object ) );
 		return m_objects.components[object.GetIndex()];
 	}
 
-	void World::ObjectRemoveAllComponents( const Object& object )
+	void World::ObjectRemoveAllComponents( const BaseObject& object )
 	{
 		assert( IsValidObject( object ) );
-		m_objects.components[object.GetIndex()].reset();
-		OnComponentRemoved( object );
+
+		for( size_t i = 0; i < MaxComponents; ++i )
+			if( m_objects.components[object.GetIndex()].test( i ) )
+				ObjectRemoveComponent( object, i );
 	}
 
 	sf::FloatRect World::GetBounds() const
@@ -307,41 +329,46 @@ namespace Reflex::Core
 
 	Reflex::Components::Transform::Handle World::GetSceneRoot() const
 	{
-		return m_sceneGraphRoot;
+		return Object( m_sceneGraphRoot ).GetTransform();
 	}
 
-	void World::OnComponentAdded( const Object& object )
+	void World::OnComponentAdded( const BaseObject& base )
 	{
+		const auto object = Object( base );
 		assert( IsValidObject( object ) );
 
 		// Here we want to check if we should add this component to any systems
-		for( const auto& system : m_systems )
+		for( const auto& systemPair : m_systems )
 		{
-			if( ( ObjectGetComponentFlags( object ) & system.second->GetRequiredComponents() ) != system.second->GetRequiredComponents() )
+			if( ( ObjectGetComponentFlags( object ) & systemPair.second->GetRequiredComponents() ) != systemPair.second->GetRequiredComponents() )
 				continue;
 
-			if( Reflex::Contains( system.second->m_releventObjects, object ) )
+			auto* system = static_cast< Reflex::Systems::System* >( systemPair.second.get() );
+			if( Reflex::Contains( system->m_releventObjects, object ) )
 				continue;
 
-			const auto insertionIter = system.second->GetInsertionIndex( object );
-			system.second->m_releventObjects.insert( insertionIter, object );
-			system.second->OnComponentAdded( object );
+			const auto insertionIter = system->GetInsertionIndex( object );
+			system->m_releventObjects.insert( insertionIter, object );
+			system->OnComponentAdded( object );
 		}
 	}
 
-	void World::OnComponentRemoved( const Object& object )
+	void World::OnComponentRemoved( const BaseObject& base )
 	{
-		for( const auto& system : m_systems )
+		const auto object = Object( base );
+
+		for( const auto& systemPair : m_systems )
 		{
-			if( ( ObjectGetComponentFlags( object ) & system.second->GetRequiredComponents() ) == system.second->GetRequiredComponents() )
+			if( ( ObjectGetComponentFlags( object ) & systemPair.second->GetRequiredComponents() ) == systemPair.second->GetRequiredComponents() )
 				continue;
 
-			const auto found = Reflex::Find( system.second->m_releventObjects, object );
-			if( found == system.second->m_releventObjects.end() )
+			auto* system = static_cast< Reflex::Systems::System* >( systemPair.second.get() );
+			const auto found = Reflex::Find( system->m_releventObjects, object );
+			if( found == system->m_releventObjects.end() )
 				continue;
 
-			system.second->OnComponentRemoved( *found );
-			system.second->m_releventObjects.erase( found );
+			system->OnComponentRemoved( *found );
+			system->m_releventObjects.erase( found );
 		}
 	}
 
@@ -359,13 +386,22 @@ namespace Reflex::Core
 		}
 
 		m_activeCamera = camera->GetObject();
-		GetWindow().setView( *m_activeCamera.GetComponent< Reflex::Components::Camera >() );
+		GetWindow().setView( *GetActiveCamera() );
+	}
+
+	Reflex::Handle< Reflex::Components::Camera > World::GetActiveCamera() const
+	{
+		return Object( m_activeCamera ).GetComponent< Reflex::Components::Camera >();
 	}
 
 	sf::Vector2f World::GetMousePosition( const Reflex::Components::Camera::Handle& camera ) const
 	{
-		if( camera )
-			return GetWindow().mapPixelToCoords( sf::Mouse::getPosition( GetWindow() ), *camera );
+		assert( camera.IsValid() );
+		return GetWindow().mapPixelToCoords( sf::Mouse::getPosition( GetWindow() ), *camera );
+	}
+
+	sf::Vector2f World::GetMousePosition() const
+	{
 		return GetWindow().mapPixelToCoords( sf::Mouse::getPosition( GetWindow() ) );
 	}
 

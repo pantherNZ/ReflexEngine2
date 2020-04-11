@@ -1,82 +1,133 @@
 #include "Precompiled.h"
 #include "TileMap.h"
-
-#include "TransformComponent.h"
 #include "Object.h"
+#include "TransformComponent.h"
 
 TODO( "Allow TileMap work when a pos outside the bounds is entered - dynamically resize the array" )
 
 namespace Reflex::Core
 {
-	TileMap::TileMap( const sf::FloatRect& worldBounds )
-		: m_worldBounds( worldBounds )
-		//, m_tileMapGridSize( tileMapGridSize )
+	TileMap::TileMap( const unsigned cellSize, const unsigned chunkSizeInCells )
+		: m_cellSize( cellSize )
+		, m_chunkSizeInCells( chunkSizeInCells )
 	{
+		Reset();
 	}
 
-	TileMap::TileMap( const sf::FloatRect& worldBounds, const unsigned spacialHashMapSize )
-		: m_worldBounds( worldBounds )
-		//, m_tileMapGridSize( tileMapGridSize )
+	void TileMap::Reset( const unsigned cellSize, const unsigned chunkSizeInCells )
 	{
-		Reset( spacialHashMapSize, false );
+		m_cellSize = cellSize;
+		m_chunkSizeInCells = chunkSizeInCells;
+		Reset();
+	}
+
+	void TileMap::Reset()
+	{
+		m_chunkSize = m_cellSize * m_chunkSizeInCells;
+		m_spacialChunks.clear();
+
+		Chunk newChunk;
+		newChunk.buckets.resize( m_chunkSizeInCells * m_chunkSizeInCells );
+		m_spacialChunks[sf::Vector2i( 0, 0 )] = newChunk;
+	}
+
+	void TileMap::Repopulate( World& world, const unsigned cellSize, const unsigned chunkSizeInCells )
+	{
+		m_cellSize = cellSize;
+		m_chunkSizeInCells = chunkSizeInCells;
+		Repopulate( world );
+	}
+
+	void TileMap::Repopulate( World& world )
+	{
+		Reset();
+		TODO( "Repopulate" );
 	}
 
 	void TileMap::Insert( const Object& obj )
 	{
-		if( obj && m_spacialHashMapSize )
+		if( obj && IsValid() )
 		{
 			const auto position = obj.GetComponent< Reflex::Components::Transform >()->GetWorldPosition();
-			Insert( obj, sf::FloatRect( position, sf::Vector2f( 0.0f, 0.0f ) ) );
+			auto& chunk = m_spacialChunks[ChunkHash( position )];
+			chunk.buckets[GetCellId( position )].push_back( obj );
+			chunk.totalObjects++;
 		}
 	}
 
 	void TileMap::Insert( const Object& obj, const sf::FloatRect& boundary )
 	{
-		if( obj && m_spacialHashMapSize )
+		if( obj && IsValid() )
 		{
-			const auto ids = GetID( boundary );
+			const auto locTopLeft = CellHash( sf::Vector2f( boundary.left, boundary.top ) );
+			const auto locBotRight = CellHash( sf::Vector2f( boundary.left + boundary.width, boundary.top + boundary.height ) );
+			std::vector< unsigned > ids;
 
-			for( auto& id : ids )
+			for( int x = locTopLeft.x; x <= locBotRight.x; ++x )
 			{
-				if( id == -1 )
-					continue;
-
-				auto& bucket = m_spacialHashMap[id];
-				bucket.emplace_back( obj );
+				for( int y = locTopLeft.y; y <= locBotRight.y; ++y )
+				{
+					const auto chunkIdx = sf::Vector2i( x / (int )m_chunkSizeInCells, y / (int )m_chunkSizeInCells );
+					auto& chunk = m_spacialChunks[chunkIdx];
+					chunk.buckets[y * m_chunkSizeInCells + x].push_back( obj );
+					chunk.totalObjects++;
+				}
 			}
 		}
 	}
 
 	void TileMap::Remove( const Object& obj )
 	{
-		if( obj && m_spacialHashMapSize )
+		if( obj && IsValid() )
 		{
-			const auto id = GetID( obj );
-
-			if( id == -1 )
-				return;
-
-			auto& bucket = m_spacialHashMap[id];
+			const auto position = obj.GetComponent< Reflex::Components::Transform >()->GetWorldPosition();
+			const auto chunkIdx = ChunkHash( position );
+			auto& chunk = m_spacialChunks[chunkIdx];
+			auto& bucket = chunk.buckets[GetCellId( position )];
 			const auto found = std::find( bucket.begin(), bucket.end(), obj );
 			assert( found != bucket.end() );
 			if( found != bucket.end() )
+			{
 				bucket.erase( found );
+				chunk.totalObjects--;
+
+				if( chunk.totalObjects == 0 )
+					m_spacialChunks.erase( chunkIdx );
+			}
 		}
 	}
 
-	void TileMap::RemoveByID( const Object& obj, const unsigned id )
+	void TileMap::Remove( const Object& obj, const sf::FloatRect& boundary )
 	{
-		if( obj && m_spacialHashMapSize && id < m_spacialHashMap.size() )
+		if( obj && IsValid() )
 		{
-			auto& bucket = m_spacialHashMap[id];
-			const auto found = std::find( bucket.begin(), bucket.end(), obj );
-			assert( found != bucket.end() );
-			if( found != bucket.end() )
-				bucket.erase( found );
+			const auto locTopLeft = CellHash( sf::Vector2f( boundary.left, boundary.top ) );
+			const auto locBotRight = CellHash( sf::Vector2f( boundary.left + boundary.width, boundary.top + boundary.height ) );
+			std::vector< unsigned > ids;
+
+			for( int x = locTopLeft.x; x <= locBotRight.x; ++x )
+			{
+				for( int y = locTopLeft.y; y <= locBotRight.y; ++y )
+				{
+					const auto chunkIdx = sf::Vector2i( x / (int )m_chunkSizeInCells, y / (int )m_chunkSizeInCells );
+					auto& chunk = m_spacialChunks[chunkIdx];
+					auto& container = chunk.buckets[y * m_chunkSizeInCells + x];
+					const auto found = std::find( container.begin(), container.end(), obj );
+					assert( found != container.end() );
+					if( found != container.end() )
+					{
+						container.erase( found );
+						chunk.totalObjects--;
+
+						if( chunk.totalObjects == 0 )
+							m_spacialChunks.erase( chunkIdx );
+					}
+				}
+			}
 		}
 	}
 
-	void TileMap::GetNearby( const Object& obj, std::vector< Object >& out ) const
+	/*void TileMap::GetNearby( const Object& obj, std::vector< Object >& out ) const
 	{
 		ForEachNearby( obj, [&out]( const Object& obj )
 		{
@@ -98,56 +149,34 @@ namespace Reflex::Core
 		{
 			out.push_back( obj );
 		} );
-	}
+	}*/
 
-	void TileMap::Reset( const bool shouldRePopulate /*= false*/ )
-	{
-		m_spacialHashMap.clear();
-		m_spacialHashMapWidth = ( unsigned )std::ceil( m_worldBounds.width / m_spacialHashMapSize );
-		m_spacialHashMapHeight = ( unsigned )std::ceil( m_worldBounds.height / m_spacialHashMapSize );
-		m_spacialHashMap.resize( m_spacialHashMapWidth * m_spacialHashMapHeight );
-
-		TODO( "TileMap: Implement shouldRePopulate system from world" );
-	}
-
-	void TileMap::Reset( const unsigned spacialHashMapSize, const bool shouldRePopulate /*= false*/ )
-	{
-		m_spacialHashMapSize = spacialHashMapSize;
-		Reset( shouldRePopulate );
-	}
-
-	unsigned TileMap::GetID( const Object& obj ) const
+	unsigned TileMap::GetCellId( const Object& obj ) const
 	{
 		assert( obj );
-		return GetID( obj.GetComponent< Reflex::Components::Transform >()->GetWorldPosition() );
+		return GetCellId( obj.GetComponent< Reflex::Components::Transform >()->GetWorldPosition() );
 	}
 
-	unsigned TileMap::GetID( const sf::Vector2f& position ) const
+	unsigned TileMap::GetCellId( const sf::Vector2f& position ) const
 	{
-		if( position.x < m_worldBounds.left || position.x > ( m_worldBounds.left + m_worldBounds.width ) ||
-			position.y < m_worldBounds.top || position.y > ( m_worldBounds.top + m_worldBounds.height ) ||
-			!m_spacialHashMapSize )
-			return -1;
-
-		const auto loc = Hash( position );
-		return loc.y * m_spacialHashMapWidth + loc.x;
+		const auto chunk = ChunkHash( position );
+		const auto startPosition = Reflex::Vector2iToVector2f( chunk ) * (float )m_chunkSize;
+		const auto loc = CellHash( position - startPosition );
+		return loc.y * m_chunkSizeInCells + loc.x;
 	}
 
-	std::vector< unsigned > TileMap::GetID( const sf::FloatRect& boundary ) const
+	sf::Vector2i TileMap::CellHash( const sf::Vector2f& position ) const
 	{
-		const auto locTopLeft = Hash( sf::Vector2f( boundary.left, boundary.top ) );
-		const auto locBotRight = Hash( sf::Vector2f( boundary.left + boundary.width, boundary.top + boundary.height ) );
-		std::vector< unsigned > ids;
-
-		for( int x = locTopLeft.x; x <= locBotRight.x; ++x )
-			for( int y = locTopLeft.y; y <= locBotRight.y; ++y )
-				ids.push_back( y * m_spacialHashMapWidth+ x );
-
-		return std::move( ids );
+		return sf::Vector2i( int( position.x / m_cellSize ), int( position.y / m_cellSize ) );
 	}
 
-	sf::Vector2i TileMap::Hash( const sf::Vector2f& position ) const
+	sf::Vector2i TileMap::ChunkHash( const sf::Vector2f& position ) const
 	{
-		return sf::Vector2i( int( position.x / m_spacialHashMapSize ), int( position.y / m_spacialHashMapSize ) );
+		return sf::Vector2i( int( position.x / m_chunkSize ), int( position.y / m_chunkSize ) );
+	}
+
+	bool TileMap::IsValid() const
+	{
+		return m_cellSize && m_chunkSize;
 	}
 }
