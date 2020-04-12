@@ -4,6 +4,28 @@
 
 namespace Reflex::Components
 {
+	void SFMLObject::Render( sf::RenderTarget& target, sf::RenderStates states ) const
+	{
+		switch( GetType() )
+		{
+		case Components::SFMLObjectType::Rectangle:
+			target.draw( GetRectangleShape(), states );
+			break;
+		case Components::SFMLObjectType::Convex:
+			target.draw( GetConvexShape(), states );
+			break;
+		case Components::SFMLObjectType::Circle:
+			target.draw( GetCircleShape(), states );
+			break;
+		case Components::SFMLObjectType::Sprite:
+			target.draw( GetSprite(), states );
+			break;
+		case Components::SFMLObjectType::Text:
+			target.draw( GetText(), states );
+			break;
+		}
+	}
+
 	SFMLObject::SFMLObject( const Reflex::Object& owner )
 		: Component< SFMLObject >( owner )
 	{

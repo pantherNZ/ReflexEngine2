@@ -15,6 +15,12 @@ namespace Reflex::Systems
 	GetWorld().RegisterComponent< T >(); \
 	m_requiredComponents.set( T::GetFamily() );
 
+	//struct SystemData
+	//{
+	//	Reflex::Object object;
+	//};
+
+	//template< typename T = SystemData >
 	class System : public BaseSystem
 	{
 	public:
@@ -34,9 +40,18 @@ namespace Reflex::Systems
 		}
 
 	protected:
-		virtual std::vector< Reflex::Object >::const_iterator GetInsertionIndex( const Object& object ) const override { return m_releventObjects.end(); }
+		virtual bool ShouldAddObject( const Object& object ) const override 
+		{ 
+			return ( object.GetComponentFlags() & GetRequiredComponents() ) == GetRequiredComponents(); 
+		}
+
+		virtual void AddComponent( const Object& object ) override
+		{
+			m_releventObjects.push_back( object );
+		}
 
 	protected:
+	//	std::vector< T > m_releventObjects;
 		std::vector< Reflex::Object > m_releventObjects;
 	};
 }

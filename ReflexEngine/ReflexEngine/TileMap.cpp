@@ -3,7 +3,13 @@
 #include "Object.h"
 #include "TransformComponent.h"
 
-TODO( "Allow TileMap work when a pos outside the bounds is entered - dynamically resize the array" )
+#define TileMapLogging 0
+
+#if TileMapLogging == 1
+	#define TILEMAP_LOG_INFO( x ) LOG_INFO( x )
+#else
+	#define TILEMAP_LOG_INFO( x ) ((void)0);
+#endif
 
 namespace Reflex::Core
 {
@@ -44,20 +50,30 @@ namespace Reflex::Core
 		TODO( "Repopulate" );
 	}
 
-	void TileMap::Insert( const Object& obj )
+	void TileMap::Insert( const Object& object )
 	{
-		if( obj && IsValid() )
+		assert( object && IsValid() );
+		if( object && IsValid() )
 		{
-			const auto position = obj.GetComponent< Reflex::Components::Transform >()->GetWorldPosition();
-			auto& chunk = m_spacialChunks[ChunkHash( position )];
-			chunk.buckets[GetCellId( position )].push_back( obj );
+			const auto position = object.GetComponent< Reflex::Components::Transform >()->GetWorldPosition();
+			const auto chunkIdx = ChunkHash( position );
+			auto& chunk = m_spacialChunks[chunkIdx];
+
+			if( chunk.buckets.empty() )
+				chunk.buckets.resize( m_chunkSizeInCells * m_chunkSizeInCells );
+
+			const auto cellId = GetCellId( position );
+			chunk.buckets[cellId].push_back( object );
 			chunk.totalObjects++;
+
+			TILEMAP_LOG_INFO( "Insert Position: " << position << ", Chunk: " << chunkIdx << ", cell: " << cellId );
 		}
 	}
 
-	void TileMap::Insert( const Object& obj, const sf::FloatRect& boundary )
+	void TileMap::Insert( const Object& object, const sf::FloatRect& boundary )
 	{
-		if( obj && IsValid() )
+		assert( object && IsValid() );
+		if( object && IsValid() )
 		{
 			const auto locTopLeft = CellHash( sf::Vector2f( boundary.left, boundary.top ) );
 			const auto locBotRight = CellHash( sf::Vector2f( boundary.left + boundary.width, boundary.top + boundary.height ) );
@@ -67,27 +83,50 @@ namespace Reflex::Core
 			{
 				for( int y = locTopLeft.y; y <= locBotRight.y; ++y )
 				{
-					const auto chunkIdx = sf::Vector2i( x / (int )m_chunkSizeInCells, y / (int )m_chunkSizeInCells );
+					const auto chunkIdx = sf::Vector2i( x / ( int )m_chunkSizeInCells, y / ( int )m_chunkSizeInCells );
 					auto& chunk = m_spacialChunks[chunkIdx];
-					chunk.buckets[y * m_chunkSizeInCells + x].push_back( obj );
+
+					if( chunk.buckets.empty() )
+						chunk.buckets.resize( m_chunkSizeInCells * m_chunkSizeInCells );
+
+					const auto cellId = y * m_chunkSizeInCells + x;
+					chunk.buckets[cellId].push_back( object );
 					chunk.totalObjects++;
+
+					TILEMAP_LOG_INFO( "Insert Boundary: Chunk: " << chunkIdx << ", cell: " << cellId );
 				}
 			}
 		}
 	}
 
-	void TileMap::Remove( const Object& obj )
+	void TileMap::Remove( const Object& object )
 	{
-		if( obj && IsValid() )
+		assert( object );
+		if( object )
+			Remove( object, object.GetComponent< Reflex::Components::Transform >()->GetWorldPosition() );
+	}
+
+	void TileMap::Remove( const Object& object, const sf::Vector2f& position )
+	{
+		assert( object );
+		if( object )
+			Remove( object, ChunkHash( position ), GetCellId( position ) );
+	}
+
+	void TileMap::Remove( const Object& object, const sf::Vector2i& chunkIdx, const unsigned cellId )
+	{
+		assert( object && IsValid() );
+		if( object && IsValid() )
 		{
-			const auto position = obj.GetComponent< Reflex::Components::Transform >()->GetWorldPosition();
-			const auto chunkIdx = ChunkHash( position );
 			auto& chunk = m_spacialChunks[chunkIdx];
-			auto& bucket = chunk.buckets[GetCellId( position )];
-			const auto found = std::find( bucket.begin(), bucket.end(), obj );
+			auto& bucket = chunk.buckets[cellId];
+
+			const auto found = std::find( bucket.begin(), bucket.end(), object );
 			assert( found != bucket.end() );
 			if( found != bucket.end() )
 			{
+				TILEMAP_LOG_INFO( "Remove Position: " << position << ", Chunk: " << chunkIdx << ", cell: " << cellId );
+
 				bucket.erase( found );
 				chunk.totalObjects--;
 
@@ -97,9 +136,10 @@ namespace Reflex::Core
 		}
 	}
 
-	void TileMap::Remove( const Object& obj, const sf::FloatRect& boundary )
+	void TileMap::Remove( const Object& object, const sf::FloatRect& boundary )
 	{
-		if( obj && IsValid() )
+		assert( object && IsValid() );
+		if( object && IsValid() )
 		{
 			const auto locTopLeft = CellHash( sf::Vector2f( boundary.left, boundary.top ) );
 			const auto locBotRight = CellHash( sf::Vector2f( boundary.left + boundary.width, boundary.top + boundary.height ) );
@@ -109,13 +149,18 @@ namespace Reflex::Core
 			{
 				for( int y = locTopLeft.y; y <= locBotRight.y; ++y )
 				{
-					const auto chunkIdx = sf::Vector2i( x / (int )m_chunkSizeInCells, y / (int )m_chunkSizeInCells );
+					const auto chunkIdx = sf::Vector2i( x / ( int )m_chunkSizeInCells, y / ( int )m_chunkSizeInCells );
 					auto& chunk = m_spacialChunks[chunkIdx];
-					auto& container = chunk.buckets[y * m_chunkSizeInCells + x];
-					const auto found = std::find( container.begin(), container.end(), obj );
+
+					const auto cellId = y * m_chunkSizeInCells + x;
+					auto& container = chunk.buckets[cellId];
+
+					const auto found = std::find( container.begin(), container.end(), object );
 					assert( found != container.end() );
 					if( found != container.end() )
 					{
+						TILEMAP_LOG_INFO( "Remove Boundary: , Chunk: " << chunkIdx << ", cell: " << cellId );
+
 						container.erase( found );
 						chunk.totalObjects--;
 
@@ -127,34 +172,34 @@ namespace Reflex::Core
 		}
 	}
 
-	/*void TileMap::GetNearby( const Object& obj, std::vector< Object >& out ) const
+	void TileMap::GetNearby( const Object& object, const float distance, std::vector< Object >& out ) const
 	{
-		ForEachNearby( obj, [&out]( const Object& obj )
+		ForEachNearby( object, distance, [&out]( const Object& obj )
 		{
 			out.push_back( obj );
 		} );
 	}
 
-	void TileMap::GetNearby( const sf::Vector2f& position, std::vector< Object >& out ) const
+	void TileMap::GetNearby( const sf::Vector2f& position, const float distance, std::vector< Object >& out ) const
 	{
-		ForEachNearby( position, [&out]( const Object& obj )
+		ForEachNearby( position, distance, [&out]( const Object& obj )
 		{
 			out.push_back( obj );
 		} );
 	}
 
-	void TileMap::GetNearby( const Object& obj, const sf::FloatRect& boundary, std::vector< Object >& out ) const
+	void TileMap::GetNearby( const sf::FloatRect& boundary, std::vector< Object >& out ) const
 	{
-		ForEachNearby( obj, boundary, [&out]( const Object& obj )
+		ForEachNearby( boundary, [&out]( const Object& obj )
 		{
 			out.push_back( obj );
 		} );
-	}*/
+	}
 
-	unsigned TileMap::GetCellId( const Object& obj ) const
+	unsigned TileMap::GetCellId( const Object& object ) const
 	{
-		assert( obj );
-		return GetCellId( obj.GetComponent< Reflex::Components::Transform >()->GetWorldPosition() );
+		assert( object );
+		return GetCellId( object.GetComponent< Reflex::Components::Transform >()->GetWorldPosition() );
 	}
 
 	unsigned TileMap::GetCellId( const sf::Vector2f& position ) const
@@ -163,6 +208,16 @@ namespace Reflex::Core
 		const auto startPosition = Reflex::Vector2iToVector2f( chunk ) * (float )m_chunkSize;
 		const auto loc = CellHash( position - startPosition );
 		return loc.y * m_chunkSizeInCells + loc.x;
+	}
+
+	sf::Vector2i TileMap::CellHash( const Object& object ) const
+	{
+		return CellHash( GetObjectPosition( object ) );
+	}
+
+	sf::Vector2i TileMap::ChunkHash( const Object& object ) const
+	{
+		return ChunkHash( GetObjectPosition( object ) );
 	}
 
 	sf::Vector2i TileMap::CellHash( const sf::Vector2f& position ) const
@@ -179,4 +234,16 @@ namespace Reflex::Core
 	{
 		return m_cellSize && m_chunkSize;
 	}
+
+	bool TileMap::IsValid( const BaseObject& object ) const
+	{
+		return Object( object ).IsValid();
+	}
+
+	sf::Vector2f TileMap::GetObjectPosition( const BaseObject& object ) const
+	{
+		assert( IsValid( object ) );
+		return Object( object ).GetTransform()->getPosition();
+	}
+
 }

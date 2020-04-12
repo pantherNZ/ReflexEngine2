@@ -4,15 +4,23 @@
 #include "VectorMap.h"
 
 #define PROFILING
+#define LOGGING
 
 namespace Reflex
 {
 	// Logging system
 	inline void LOG( const std::string& log ) { std::cout << log << "\n"; }
 
-	#define LOG_CRIT( x ) { Reflex::SetConsoleTextAttributes textColour( FOREGROUND_RED ); Reflex::LOG( Stream( "CRIT: (" << __FUNCTION__ << ") " << x ) ); assert( false ); }
-	#define LOG_WARN( x ) { Reflex::SetConsoleTextAttributes textColour( FOREGROUND_YELLOW ); Reflex::LOG( Stream( "Warning: (" << __FUNCTION__ << ") " << x ) ); }
+#ifdef LOGGING
+	#define LOG_CRIT( x ) { Reflex::SetConsoleTextAttributes textColour( FOREGROUND_RED ); Reflex::LOG( Stream( "CRIT: (" << __FUNCTION__ << ", " << __LINE__ << ") " << x ) ); assert( false ); }
+	#define LOG_WARN( x ) { Reflex::SetConsoleTextAttributes textColour( FOREGROUND_YELLOW ); Reflex::LOG( Stream( "Warning: (" << __FUNCTION__ << ", " << __LINE__ << ") " << x ) ); }
 	#define LOG_INFO( x ) Reflex::LOG( Stream( "Info: " << x ) );
+#else
+	#define LOG_CRIT( x ) ((void)0);
+	#define LOG_WARN( x ) ((void)0);
+	#define LOG_INFO( x ) ((void)0);
+#endif
+
 	#define THROW( x ) throw std::runtime_error( Stream( "EXCEPTION: (" << __FUNCTION__ << ") " << x ) );
 
 	// Profiling code

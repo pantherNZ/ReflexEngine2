@@ -26,9 +26,11 @@ namespace Reflex::Systems
 
 		virtual void OnSystemStartup() { }
 		virtual void OnSystemShutdown() { }
+
+		virtual bool ShouldAddObject( const Reflex::Object& object ) const = 0;
+		virtual void AddComponent( const Reflex::Object& object ) = 0;
 		virtual void OnComponentAdded( const Reflex::Object& object ) { }
 		virtual void OnComponentRemoved( const Reflex::Object& object ) { }
-		virtual std::vector< Reflex::Object >::const_iterator GetInsertionIndex( const Object& object ) const = 0;
 
 	private:
 		void draw( sf::RenderTarget& target, sf::RenderStates states ) const final { Render( target, states ); }

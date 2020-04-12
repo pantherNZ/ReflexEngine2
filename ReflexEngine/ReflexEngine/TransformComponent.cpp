@@ -7,32 +7,42 @@ namespace Reflex::Components
 {
 	unsigned Transform::s_nextRenderIndex = 1U;
 
-	Transform::Transform( const Reflex::Object& owner, const sf::Vector2f& position /*= sf::Vector2f()*/, const float rotation /*= 0.0f*/, const sf::Vector2f& scale /*= sf::Vector2f( 1.0f, 1.0f )*/ )
+	Transform::Transform( const Reflex::Object& owner, const sf::Vector2f& position /*= sf::Vector2f()*/, const float rotation /*= 0.0f*/, const sf::Vector2f& scale /*= sf::Vector2f( 1.0f, 1.0f )*/, const bool useTileMap /*= true*/ )
 		: Component< Transform >( owner )
 		, SceneNode( owner )
 		, EventTriggerer( GetWorld() )
+		, m_useTileMap( useTileMap )
 	{
 		assert( scale.x != 0.0f || scale.y != 0.0f );
-		setPosition( position );
+		SceneNode::setPosition( position );
 		setRotation( rotation );
 		setScale( scale );
 	}
 
 	Transform::Transform( const Transform& other )
 		: SceneNode( other )
-		, Component( other )
+		, Component< Transform >( other )
 		, EventTriggerer( other )
 		, m_rotateDegreesPerSec( other.m_rotateDegreesPerSec )
 		, m_rotateDurationSec( other.m_rotateDurationSec )
 		, m_finishedRotationCallback( other.m_finishedRotationCallback )
+		, m_useTileMap( other.m_useTileMap )
 	{
-
 	}
 
-	Transform::~Transform()
+	void Transform::OnConstructionComplete()
 	{
-		//auto& tileMap = m_object->GetWorld().GetTileMap();
-		//tileMap.Remove( Component::GetObject() );
+		if( m_useTileMap )
+			GetWorld().GetTileMap().Insert( Component::GetObject() );
+	}
+
+	void Transform::OnDestructionBegin()
+	{
+		if( m_useTileMap )
+		{
+			auto& tileMap = m_object.GetWorld().GetTileMap();
+			tileMap.Remove( Component::GetObject() );
+		}
 	}
 
 	bool Transform::SetValue( const std::string& variable, const std::string& value )
@@ -75,18 +85,28 @@ namespace Reflex::Components
 
 	void Transform::setPosition( const sf::Vector2f& position )
 	{
-		//auto& tileMap = GetWorld().GetTileMap();
-		//const auto previousID = tileMap.GetCellId( Component::GetObject() );
+
+
+		if( m_useTileMap )
+		{
+			auto& tileMap = GetWorld().GetTileMap();
+
+			const auto prevCellId = tileMap.GetCellId( Component::GetObject() );
+			const auto prevChunkHash = tileMap.ChunkHash( Component::GetObject() );
+
+			sf::Transformable::setPosition( position );
+
+			if( prevCellId != tileMap.GetCellId( Component::GetObject() ) ||
+				prevChunkHash != tileMap.ChunkHash( Component::GetObject() ) )
+			{
+				tileMap.Remove( Component::GetObject(), prevChunkHash, prevCellId );
+				tileMap.Insert( Component::GetObject() );
+			}
+
+			return;
+		}
 
 		sf::Transformable::setPosition( position );
-
-		//const auto newID = tileMap.GetCellId( Component::GetObject() );
-		//
-		//if( previousID != newID )
-		//{
-		//	tileMap.Remove( Component::GetObject() );
-		//	tileMap.Insert( Component::GetObject() );
-		//}
 	}
 
 	void Transform::move( float offsetX, float offsetY )
@@ -168,4 +188,25 @@ namespace Reflex::Components
 	{
 		return m_renderIndex;
 	}
+
+	Reflex::BoundingBox Transform::GetLocalBounds() const
+	{
+		return localBounds;
+	}
+
+	Reflex::BoundingBox Transform::GetGlobalBounds() const
+	{
+		sf::Transform transformFinal;
+		transformFinal.scale( GetWorldScale() ).translate( GetWorldTranslation() );
+		auto globalBounds = transformFinal.transformRect( localBounds );
+		//globalBounds.left -= localBounds.width / 2.0f;
+		//globalBounds.top -= localBounds.height / 2.0f;
+		return Reflex::BoundingBox( globalBounds, GetWorldRotation() );
+	}
+
+	void Transform::SetLocalBounds( const Reflex::BoundingBox& bounds )
+	{
+		localBounds = bounds;
+	}
+
 }

@@ -36,7 +36,7 @@ namespace Reflex::Core
 		void Update( const float deltaTime );
 		void Render();
 
-		void UpdateStatistics( const float deltaTime );
+		void UpdateStatistics( const float deltaTime, const int frameTimeMS );
 
 	protected:
 		// Core window

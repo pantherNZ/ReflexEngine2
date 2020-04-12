@@ -59,6 +59,9 @@ namespace Reflex::Components
 				values.emplace_back( "OutlineColour", Reflex::ToString( shape.getOutlineColor() ) );
 		}
 
+	protected:
+		void Render( sf::RenderTarget& target, sf::RenderStates states ) const final;
+
 	private:
 		union ObjectType
 		{

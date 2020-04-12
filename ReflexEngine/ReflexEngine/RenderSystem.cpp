@@ -14,6 +14,29 @@ namespace Reflex::Systems
 		RequiresComponent( Reflex::Components::Transform );
 	}
 
+	bool RenderSystem::ShouldAddObject( const Object& object ) const
+	{
+		for( unsigned i = 0; i < Reflex::MaxComponents; ++i )
+			if( const auto* cmp = GetWorld().ObjectGetComponent( object, i ) )
+				if( cmp->IsRenderComponent() )
+					return true;
+
+		return false;
+	}
+
+	void RenderSystem::AddComponent( const Object& object )
+	{
+		m_releventObjects.insert( GetInsertionIndex( object ), object );
+	}
+
+	std::vector< Reflex::Object >::const_iterator RenderSystem::GetInsertionIndex( const Object& object ) const
+	{
+		return std::lower_bound( m_releventObjects.begin(), m_releventObjects.end(), object, []( const Reflex::Object& left, const Reflex::Object& right )
+		{
+			return left.GetTransform()->GetRenderIndex() < right.GetTransform()->GetRenderIndex();
+		} );
+	}
+
 	void RenderSystem::OnComponentAdded( const Reflex::Object& object )
 	{
 		object.GetTransform()->Subscribe< Components::Transform::RenderIndexChangedEvent >( *this, &RenderSystem::OnRenderIndexChanged );
@@ -31,37 +54,18 @@ namespace Reflex::Systems
 		PROFILE;
 		sf::RenderStates copied_states( states );
 
-		ForEachObject< Reflex::Components::SFMLObject, Reflex::Components::Transform >(
-		[&target, &copied_states, &states]( Reflex::Components::SFMLObject::Handle object, Reflex::Components::Transform::Handle transform )
+		for( const auto& object : m_releventObjects )
 		{
-			copied_states.transform = transform->GetWorldTransform();
-
-			switch( object->GetType() )
+			for( unsigned i = 0; i < Reflex::MaxComponents; ++i )
 			{
-			case Components::SFMLObjectType::Rectangle:
-				target.draw( object->GetRectangleShape(), copied_states );
-				break;
-			case Components::SFMLObjectType::Convex:
-				target.draw( object->GetConvexShape(), copied_states );
-				break;
-			case Components::SFMLObjectType::Circle:
-				target.draw( object->GetCircleShape(), copied_states );
-			break;
-			case Components::SFMLObjectType::Sprite:
-				target.draw( object->GetSprite(), copied_states );
-				break;
-			case Components::SFMLObjectType::Text:
-				target.draw( object->GetText(), copied_states );
-				break;
+				const auto* cmp = GetWorld().ObjectGetComponent( object, i );
+
+				if( !cmp || !cmp->IsRenderComponent() )
+					continue;
+
+				copied_states.transform = object.GetTransform()->GetWorldTransform();
+				cmp->Render( target, copied_states );
 			}
-		} );
-	}
-
-	std::vector< Reflex::Object >::const_iterator RenderSystem::GetInsertionIndex( const Object& object ) const
-	{
-		return std::lower_bound( m_releventObjects.begin(), m_releventObjects.end(), object, []( const Reflex::Object& left, const Reflex::Object& right )
-			{
-				return left.GetTransform()->GetRenderIndex() < right.GetTransform()->GetRenderIndex();
-			} );
+		}
 	}
 }

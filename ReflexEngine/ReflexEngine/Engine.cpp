@@ -98,8 +98,8 @@ namespace Reflex::Core
 				if( !m_cmdMode )
 				{
 					ImGui::SFML::Update( m_window, deltaTime );
-					UpdateStatistics( deltaTime.asSeconds() );
 					Render();
+					UpdateStatistics( deltaTime.asSeconds(), clock.getElapsedTime().asMilliseconds() );
 				}
 
 				const auto targetFPS = sf::seconds( 1.0f / m_fpsLimit );
@@ -172,11 +172,13 @@ namespace Reflex::Core
 		ImGui::SetNextWindowSize( sf::Vector2( 200.0f, 200.0f ), ImGuiCond_::ImGuiCond_Once );
 		ImGui::Begin( "Engine Info" );
 		ImGui::Text( m_statisticsText.toAnsiString().c_str() );
+		ImGui::InputInt( "FPS Limit", &m_fpsLimit, 1, 10 );
+		m_fpsLimit = std::max( 0, m_fpsLimit );
+
+		ImGui::NewLine();
 
 		ImGui::Checkbox( "Show ImGui Metrics", &m_showMetrics );
 		ImGui::Checkbox( "Show ImGui Style Editor", &m_showStyleEditor );
-		ImGui::InputInt( "FPS Limit", &m_fpsLimit, 1, 10 );
-		m_fpsLimit = std::max( 0, m_fpsLimit );
 
 		if( m_showMetrics )
 			ImGui::ShowMetricsWindow();
@@ -194,23 +196,23 @@ namespace Reflex::Core
 		m_window.display();
 	}
 
-	void Engine::UpdateStatistics( const float deltaTime )
+	void Engine::UpdateStatistics( const float deltaTime, const int frameTimeMS )
 	{
 		m_statisticsUpdateTime += sf::seconds( deltaTime );
 		m_statisticsNumFrames += 1;
-		const auto interval = sf::seconds( 1.0f );
+		const auto interval = sf::seconds( 0.2f );
 
 		if( m_statisticsUpdateTime >= interval )
 		{
-			//m_statisticsNumFrames = 1.0f / deltaTime;
-			const auto ms_per_frame = m_statisticsUpdateTime.asMilliseconds() / ( float )m_statisticsNumFrames;
 			std::stringstream ss;
-			ss << "FPS: " << std::to_string( m_statisticsNumFrames ) << "\nFrame Time: ";
+			const auto totalFrames = m_statisticsNumFrames * ( 1.0f / interval.asSeconds() );
+			ss << "FPS: " << std::to_string( totalFrames ) << "\nFrame Time: ";
 			
+			const auto ms_per_frame = frameTimeMS / ( float )totalFrames;
 			if( ms_per_frame > 0 )
 				ss << std::fixed << std::setprecision( 2 ) << ms_per_frame << "ms";
 			else
-				ss << ( m_statisticsUpdateTime.asMicroseconds() / m_statisticsNumFrames ) << "us";
+				ss << ( m_statisticsUpdateTime.asMicroseconds() / totalFrames ) << "us";
 
 			ss << "\nDuration: " << ( int )m_totalTime.getElapsedTime().asSeconds() << "s";
 

@@ -27,7 +27,7 @@ namespace Reflex
 	#define TODO( Msg ) __pragma( message( __FILE__ "(" STRINGIFY2( __LINE__ ) ") : TODO [ " Msg " ]" ) )
 	#define Stream( message ) [&](){ std::stringstream s; s << message; return s.str(); }()
 
-	// Bounding box with rect
+	// Bounding box with rect and rotation
 	struct BoundingBox : public sf::FloatRect
 	{
 		// Methods
@@ -293,6 +293,13 @@ namespace Reflex
 	bool IsDefault( const T& vec )
 	{
 		return vec == T{};
+	}
+
+	template< typename T >
+	std::ostream& operator<<( std::ostream& os, const sf::Vector2< T >& v )
+	{
+		os << "(" << v.x << ", " << v.y << ")";
+		return os;
 	}
 
 	// Awful conversions

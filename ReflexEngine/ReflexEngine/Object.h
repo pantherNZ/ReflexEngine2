@@ -52,8 +52,8 @@ namespace Reflex
 		// Copy components from another object to this object
 		//template< typename... Args >
 		//void CopyComponentsFrom( const Object& other );
+		Reflex::ComponentsMask GetComponentFlags() const;
 
-		Reflex::Core::World& GetWorld() const;
 		bool IsFlagSet( const ObjectFlags flag ) const;
 
 		bool IsValid() const;

@@ -37,8 +37,8 @@ namespace Reflex::Core
 
 		/* Object functions*/
 		void CreateROFile( const std::string& name, const Object& object );
-		Object CreateObject( const sf::Vector2f& position = sf::Vector2f(), const float rotation = 0.0f, const sf::Vector2f & scale = sf::Vector2f( 1.0f, 1.0f ), const bool attachToRoot = true );
-		Object CreateObject( const std::string& objectFile, const sf::Vector2f& position = sf::Vector2f(), const float rotation = 0.0f, const sf::Vector2f & scale = sf::Vector2f( 1.0f, 1.0f ), const bool attachToRoot = true );
+		Object CreateObject( const sf::Vector2f& position = sf::Vector2f(), const float rotation = 0.0f, const sf::Vector2f & scale = sf::Vector2f( 1.0f, 1.0f ), const bool attachToRoot = true, const bool useTileMap = true );
+		Object CreateObject( const std::string& objectFile, const sf::Vector2f& position = sf::Vector2f(), const float rotation = 0.0f, const sf::Vector2f & scale = sf::Vector2f( 1.0f, 1.0f ), const bool attachToRoot = true, const bool useTileMap = true );
 
 		void DestroyObject( const BaseObject& object );
 		void DestroyAllObjects();
@@ -185,8 +185,8 @@ namespace Reflex::Core
 		auto* allocator = static_cast< ComponentAllocator< T >* >( m_components[family].get() );
 		auto newComponent = static_cast< T* >( allocator->Construct( object.GetIndex(), object, std::forward<Args>( args )... ) );
 		m_objects.components[object.GetIndex()].set( family );
-		OnComponentAdded( object );
 		newComponent->OnConstructionComplete();
+		OnComponentAdded( object );
 		return newComponent;
 	}
 
@@ -247,13 +247,11 @@ namespace Reflex::Core
 			if( IsObjectFlagSet( i, ObjectFlags::Deleted ) )
 				continue;
 
-			auto mask = m_objects.components[i];
+			if( !system->ShouldAddObject( ObjectFromIndex( i ) ) )
+				continue;
 
-			if( ( mask & system->GetRequiredComponents() ) == system->GetRequiredComponents() )
-			{
-				const auto insertionIter = system->GetInsertionIndex( ObjectFromIndex( i ) );
-				system->m_releventObjects.insert( insertionIter, ObjectFromIndex( i ) );
-			}
+			system->AddComponent( ObjectFromIndex( i ) );
+			system->OnComponentAdded( ObjectFromIndex( i ) );
 		}
 
 		auto result = m_systems.insert( std::make_pair( type, std::move( system ) ) );

@@ -35,6 +35,7 @@ namespace Reflex
 
 		std::uint32_t GetIndex() const { return m_index; }
 		std::uint32_t GetCounter() const { return m_counter; }
+		Reflex::Core::World& GetWorld() const { assert( m_world ); return *m_world; }
 
 		bool operator==( const BaseObject& other ) const
 		{

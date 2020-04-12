@@ -15,9 +15,11 @@ namespace Reflex::Components
 		friend class Reflex::Systems::MovementSystem;
 		friend class Grid;
 
-		Transform( const Reflex::Object& owner, const sf::Vector2f& position = sf::Vector2f(), const float rotation = 0.0f, const sf::Vector2f & scale = sf::Vector2f( 1.0f, 1.0f ) );
+		Transform( const Reflex::Object& owner, const sf::Vector2f& position = sf::Vector2f(), const float rotation = 0.0f, const sf::Vector2f & scale = sf::Vector2f( 1.0f, 1.0f ), const bool useTileMap = true );
 		Transform( const Transform& other );
-		~Transform();
+
+		void OnConstructionComplete();
+		void OnDestructionBegin() override;
 
 		bool SetValue( const std::string& variable, const std::string& value ) override;
 		void GetValues( std::vector< std::pair< std::string, std::string > >& values ) const override;
@@ -57,14 +59,20 @@ namespace Reflex::Components
 			unsigned renderIdx = 0;
 		};
 
+		Reflex::BoundingBox GetLocalBounds() const;
+		Reflex::BoundingBox GetGlobalBounds() const;
+		void SetLocalBounds( const Reflex::BoundingBox& bounds );
+
 	protected:
 		unsigned m_renderIndex = 0U;
 		static unsigned s_nextRenderIndex;
 
+		bool m_useTileMap = true;
 		float m_rotateDegreesPerSec = 0.0f;
 		float m_rotateDurationSec = 0.0f;
 		std::function< void( const Transform::Handle& ) > m_finishedRotationCallback;
 		sf::Vector2f m_velocity = sf::Vector2f( 0.0f, 0.0f );
 		float m_maxVelocity = std::numeric_limits< float >::infinity();
+		Reflex::BoundingBox localBounds;
 	};
 }

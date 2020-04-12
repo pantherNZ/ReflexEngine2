@@ -50,7 +50,6 @@ namespace Reflex::Systems
 			boid->IsBehaviourSet( Steering::Behaviours::Cohesion )  ||
 			boid->IsBehaviourSet( Steering::Behaviours::Separation ) )	steering += Flocking( boid );
 
-		LOG_WARN( "Steering: " << steering.x << ", " << steering.y );
 		return steering;
 	}
 
@@ -101,7 +100,6 @@ namespace Reflex::Systems
 		const auto circleCentre = boid->GetTransform()->getPosition() + Reflex::ScaleTo( transform->GetVelocity(), boid->m_wanderCircleDistance );
 		const auto steeringPos = circleCentre + Reflex::VectorFromAngle( boid->m_currentWanderAngle, boid->m_wanderCircleRadius );
 
-		PROFILE_NAME( Seek );
 		return Seek( boid, steeringPos );
 	}
 

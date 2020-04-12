@@ -47,7 +47,7 @@ namespace Reflex::Core
 		AddSystem< Reflex::Systems::CameraSystem >();
 		AddSystem< Reflex::Systems::SteeringSystem >();
 
-		m_sceneGraphRoot = CreateObject( sf::Vector2f( 0.0f, 0.0f ), 0.0f, sf::Vector2f( 1.0f, 1.0f ), false );
+		m_sceneGraphRoot = CreateObject( sf::Vector2f( 0.0f, 0.0f ), 0.0f, sf::Vector2f( 1.0f, 1.0f ), false, false );
 	}
 
 	void World::Update( const float deltaTime )
@@ -78,7 +78,7 @@ namespace Reflex::Core
 		}
 	}
 
-	Object World::CreateObject( const sf::Vector2f& position, const float rotation, const sf::Vector2f& scale, const bool attachToRoot /*= true*/ )
+	Object World::CreateObject( const sf::Vector2f& position, const float rotation, const sf::Vector2f& scale, const bool attachToRoot /*= true*/, const bool useTileMap /*= true*/ )
 	{
 		unsigned index = 0;
 
@@ -100,8 +100,7 @@ namespace Reflex::Core
 		}
 
 		Object newObject = ObjectFromIndex( index );
-		const auto transform = newObject.AddComponent< Reflex::Components::Transform >( position, rotation, scale );
-		//GetTileMap().Insert( newObject, sf::FloatRect( transform->GetWorldPosition(), sf::Vector2f( 0.0f, 0.0f ) ) );
+		const auto transform = newObject.AddComponent< Reflex::Components::Transform >( position, rotation, scale, useTileMap );
 
 		if( attachToRoot )
 		{
@@ -114,9 +113,9 @@ namespace Reflex::Core
 		return newObject;
 	}
 
-	Object World::CreateObject( const std::string& objectFile, const sf::Vector2f& position, const float rotation, const sf::Vector2f& scale, const bool attachToRoot /*= true*/ )
+	Object World::CreateObject( const std::string& objectFile, const sf::Vector2f& position, const float rotation, const sf::Vector2f& scale, const bool attachToRoot /*= true*/, const bool useTileMap /*= true*/ )
 	{
-		auto newObject = CreateObject( position, rotation, scale, attachToRoot );
+		auto newObject = CreateObject( position, rotation, scale, attachToRoot, useTileMap );
 		
 		const auto dot = objectFile.rfind( '.' );
 
@@ -198,8 +197,8 @@ namespace Reflex::Core
 			std::vector< std::pair< std::string, std::string > > values;
 			ObjectGetComponent( object, i )->GetValues( values );
 
-			for( const auto& value : values )
-				data[value.first] = value.second;
+			for( const auto& [key, value] : values )
+				data[key] = value;
 
 			const auto componentName = std::find_if( m_componentNameToIndex.begin(), m_componentNameToIndex.end(), [&]( const auto& pair )
 			{
@@ -228,11 +227,10 @@ namespace Reflex::Core
 
 		m_components[family]->ExpandToFit( object.GetIndex() + 1 );
 
-		//std::static_pointer_cast< 
 		auto* newComponent = static_cast< Reflex::Components::BaseComponent* >( m_components[family].get()->ConstructEmpty( object.GetIndex(), ( Object )object ) );
 		m_objects.components[object.GetIndex()].set( family );
-		OnComponentAdded( object );
 		newComponent->OnConstructionComplete();
+		OnComponentAdded( object );
 		return newComponent;
 	}
 
@@ -251,9 +249,11 @@ namespace Reflex::Core
 		if( !ObjectHasComponent( object, family ) )
 			return false;
 
+		auto* component = static_cast< Reflex::Components::BaseComponent* >( m_components[family]->Get( object.GetIndex() ) );
 		m_objects.components[object.GetIndex()].reset( family );
-		 m_components[family].get()->Destroy( object.GetIndex() );
-		OnComponentRemoved( object );
+		OnComponentRemoved( object ); 
+		component->OnDestructionBegin();
+		m_components[family].get()->Destroy( object.GetIndex() );
 		return true;
 	}
 
@@ -338,17 +338,17 @@ namespace Reflex::Core
 		assert( IsValidObject( object ) );
 
 		// Here we want to check if we should add this component to any systems
-		for( const auto& systemPair : m_systems )
+		for( const auto&[type, baseSystem] : m_systems )
 		{
-			if( ( ObjectGetComponentFlags( object ) & systemPair.second->GetRequiredComponents() ) != systemPair.second->GetRequiredComponents() )
+			if( !baseSystem->ShouldAddObject( object ) )
 				continue;
 
-			auto* system = static_cast< Reflex::Systems::System* >( systemPair.second.get() );
-			if( Reflex::Contains( system->m_releventObjects, object ) )
+			auto* system = static_cast< Reflex::Systems::System* >( baseSystem.get() );
+			const auto found = Reflex::Find( system->m_releventObjects, object );
+			if( found != system->m_releventObjects.end() )
 				continue;
 
-			const auto insertionIter = system->GetInsertionIndex( object );
-			system->m_releventObjects.insert( insertionIter, object );
+			system->AddComponent( object ); 
 			system->OnComponentAdded( object );
 		}
 	}
@@ -357,18 +357,18 @@ namespace Reflex::Core
 	{
 		const auto object = Object( base );
 
-		for( const auto& systemPair : m_systems )
+		for( const auto& [type, baseSystem] : m_systems )
 		{
-			if( ( ObjectGetComponentFlags( object ) & systemPair.second->GetRequiredComponents() ) == systemPair.second->GetRequiredComponents() )
+			if( !baseSystem->ShouldAddObject( object ) )
 				continue;
 
-			auto* system = static_cast< Reflex::Systems::System* >( systemPair.second.get() );
+			auto* system = static_cast< Reflex::Systems::System* >( baseSystem.get() );
 			const auto found = Reflex::Find( system->m_releventObjects, object );
 			if( found == system->m_releventObjects.end() )
 				continue;
 
-			system->OnComponentRemoved( *found );
 			system->m_releventObjects.erase( found );
+			system->OnComponentRemoved( *found );
 		}
 	}
 

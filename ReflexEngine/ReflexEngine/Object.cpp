@@ -37,10 +37,9 @@ namespace Reflex
 		return GetComponent< Reflex::Components::Transform >();
 	}
 
-	Reflex::Core::World& Object::GetWorld() const
+	Reflex::ComponentsMask Object::GetComponentFlags() const
 	{
-		assert( m_world );
-		return *m_world;
+		return GetWorld().ObjectGetComponentFlags( *this );
 	}
 
 	bool Object::IsFlagSet( const ObjectFlags flag ) const
