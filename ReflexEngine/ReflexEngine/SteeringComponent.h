@@ -51,6 +51,8 @@ namespace Reflex::Components
 		void SetMaxForce( const float force );
 		void SetMass( const float newMass );
 
+		bool b = false;
+
 	protected:
 		void SetBehaviourInternal( const Behaviours behaviour );
 
@@ -80,6 +82,6 @@ namespace Reflex::Components
 		float m_neighbourRange = 300.0f;
 		float m_alignmentForce = 1.0f;
 		float m_cohesionForce = 1.0f; 
-		float m_separationForce = 1.0f;;
+		float m_separationForce = 1.0f;
 	};
 }

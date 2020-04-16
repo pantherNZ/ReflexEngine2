@@ -6,6 +6,8 @@
 #include "StateManager.h"
 #include "Object.h"
 
+#define DISABLE_TILEMAP
+
 namespace Reflex::Core
 {
 	// Engine class
@@ -36,7 +38,7 @@ namespace Reflex::Core
 		void Update( const float deltaTime );
 		void Render();
 
-		void UpdateStatistics( const float deltaTime, const int frameTimeMS );
+		void UpdateStatistics( const int deltaTimeUS, const int frameTimeUS );
 
 	protected:
 		// Core window
@@ -54,7 +56,18 @@ namespace Reflex::Core
 		sf::String m_statisticsText;
 		sf::Time m_statisticsUpdateTime;
 		sf::Clock m_totalTime;
-		unsigned int m_statisticsNumFrames = 0U;
+
+		struct Frame
+		{
+			int deltaTimeUS = 0;
+			int frameTimeUS = 0;
+		};
+
+		int totalDeltaUS = 0;
+		int totalTimeUS = 0;
+		enum { NumSamples = 20 };
+		Frame frames[NumSamples];
+		int idx = -1;
 
 		// ImGui
 		bool m_profilingEnabled = false;

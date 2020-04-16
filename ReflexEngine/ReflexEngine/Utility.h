@@ -408,6 +408,22 @@ namespace Reflex
 		return r;
 	}
 
+	inline sf::Color ColourFromScalar( float t_val )
+	{
+		sf::Color colour( 0, 0, 0, 255 );
+		t_val *= 4.0f;
+		if( ( 0 <= t_val && t_val <= 1 ) || ( 5 <= t_val && t_val <= 6 ) ) colour.r = 255;
+		else if( 4 <= t_val && t_val <= 5 ) colour.r = sf::Uint8( 255 * ( t_val - 4 ) );
+		else if( 1 <= t_val && t_val <= 2 ) colour.r = sf::Uint8( 255 * ( 1.0f - ( t_val - 1 ) ) );
+		if( 1 <= t_val && t_val <= 3 ) colour.g = 255;
+		else if( 0 <= t_val && t_val <= 1 ) colour.g = sf::Uint8( 255 * t_val );
+		else if( 3 <= t_val && t_val <= 4 ) colour.g = sf::Uint8( 255 * ( 1.0f - ( t_val - 3 ) ) );
+		if( 3 <= t_val && t_val <= 5 ) colour.b = 255;
+		else if( 2 <= t_val && t_val <= 3 ) colour.b = sf::Uint8( 255 * ( t_val - 2 ) );
+		else if( 5 <= t_val && t_val <= 6 ) colour.b = sf::Uint8( 255 * ( 1.0f - ( t_val - 5 ) ) );
+		return colour;
+	}
+
 	// Useful math functions
 	inline float Dot( const sf::Vector2f& a, const sf::Vector2f& b )
 	{

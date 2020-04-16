@@ -3,6 +3,7 @@
 #include "TransformComponent.h"
 #include "World.h"
 #include "Logging.h"
+#include "SFMLObjectComponent.h"
 
 namespace Reflex::Systems
 {
@@ -15,9 +16,9 @@ namespace Reflex::Systems
 	{
 		PROFILE;
 		ForEachObject< Reflex::Components::Steering >( [&]( const Reflex::Components::Steering::Handle& boid )
-			{
-				Integrate( boid, deltaTime );
-			} );
+		{
+			Integrate( boid, deltaTime );
+		} );
 	}
 
 	void SteeringSystem::Integrate( const Steering::Handle& boid, const float deltaTime ) const
@@ -31,7 +32,7 @@ namespace Reflex::Systems
 		boid->m_desired = Steering( boid );
 		boid->m_steering = boid->m_desired - transform->GetVelocity();
 
-		boid->m_steering = Reflex::Truncate( boid->m_steering, boid->m_maxForce );
+		boid->m_steering = Reflex::ScaleTo( boid->m_steering, boid->m_maxForce );
 		boid->m_steering /= boid->m_mass;
 
 		transform->SetVelocity( transform->GetVelocity() + boid->m_steering );
@@ -119,22 +120,47 @@ namespace Reflex::Systems
 	sf::Vector2f SteeringSystem::Flocking( const Steering::Handle& boid ) const
 	{
 		sf::Vector2f alignment, cohesion, separation;
+		const auto pos = boid->GetTransform()->getPosition();
 		unsigned counter = 0;
 
-		ForEachObject< Reflex::Components::Steering >( [&]( const Reflex::Components::Steering::Handle& b )
+		static bool t = true;
+
+		if( boid->b && t )
 		{
-			if( boid == b )
+			t = false;
+
+			if( auto sfmlObj = boid->GetObject().GetComponent< Reflex::Components::SFMLObject >() )
+				sfmlObj->GetCircleShape().setFillColor( Reflex::ColourFromScalar( 0.3f ) );
+		}
+
+		
+#ifndef DISABLE_TILEMAP
+		GetWorld().GetTileMap().ForEachInRange( pos, boid->m_neighbourRange, [&]( const Reflex::Object& nearby )
+		{
+			if( boid == nearby || !nearby.HasComponent< Reflex::Components::Steering >() )
 				return;
+#else
+		ForEachObject< Reflex::Components::Steering >( [&]( const Reflex::Components::Steering::Handle& steering )
+		{
+			const auto nearby = steering->GetObject();
 
-			const auto direction = boid->GetTransform()->getPosition() - b->GetTransform()->getPosition();
+			if( boid == nearby )
+				return;
+#endif
+			const auto nearbyTransform = nearby.GetTransform();
+			const auto nearbyPos = nearbyTransform->getPosition();
 
-			if( Reflex::GetMagnitudeSq( direction ) >= boid->m_neighbourRange * boid->m_neighbourRange )
+			if( Reflex::GetDistanceSq( pos, nearbyPos ) > boid->m_neighbourRange * boid->m_neighbourRange )
 				return;
 
 			counter++;
-			alignment += b->GetTransform()->GetVelocity();
-			cohesion += b->GetTransform()->getPosition();
-			separation += direction;
+			alignment += nearbyTransform->GetVelocity();
+			cohesion += nearbyPos;
+			separation += pos - nearbyPos;
+
+			if( boid->b )
+				if( auto sfmlObj = nearby.GetComponent< Reflex::Components::SFMLObject >() )
+					sfmlObj->GetCircleShape().setFillColor( Reflex::ColourFromScalar( 0.5f ) );
 		} );
 
 		if( counter )

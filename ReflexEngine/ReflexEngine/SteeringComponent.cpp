@@ -1,6 +1,7 @@
 #include "Precompiled.h"
 #include "SteeringComponent.h"
 #include "TransformComponent.h"
+#include "SFMLObjectComponent.h"
 
 namespace Reflex::Components
 {
@@ -185,5 +186,4 @@ namespace Reflex::Components
 	{
 		return m_behaviours.test( (size_t )behaviour );
 	}
-
 }

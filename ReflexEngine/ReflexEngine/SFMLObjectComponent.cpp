@@ -32,49 +32,55 @@ namespace Reflex::Components
 
 	}
 
-	SFMLObject::SFMLObject( const Reflex::Object& owner, const sf::CircleShape& shape, const sf::Color& colour )
+	SFMLObject::SFMLObject( const Reflex::Object& owner, const sf::CircleShape& shape, const std::optional< sf::Color > colour )
 		: Component< SFMLObject >( owner )
 		, m_type( SFMLObjectType::Circle )
 		, m_objectData( shape )
 	{
 		Reflex::CenterOrigin( m_objectData.circleShape );
-		m_objectData.circleShape.setFillColor( colour );
+		if( colour )
+			m_objectData.circleShape.setFillColor( *colour );
 	}
 
-	SFMLObject::SFMLObject( const Reflex::Object& owner, const sf::ConvexShape& shape, const sf::Color& colour )
+	SFMLObject::SFMLObject( const Reflex::Object& owner, const sf::ConvexShape& shape, const std::optional< sf::Color > colour )
 		: Component< SFMLObject >( owner )
 		, m_type( SFMLObjectType::Convex )
 		, m_objectData( shape )
 	{
 		Reflex::CenterOrigin( m_objectData.convexShape );
-		m_objectData.convexShape.setFillColor( colour );
+		
+		if( colour )
+			m_objectData.convexShape.setFillColor( *colour );
 	}
 
-	SFMLObject::SFMLObject( const Reflex::Object& owner, const sf::RectangleShape& shape, const sf::Color& colour )
+	SFMLObject::SFMLObject( const Reflex::Object& owner, const sf::RectangleShape& shape, const std::optional< sf::Color > colour )
 		: Component< SFMLObject >( owner )
 		, m_type( SFMLObjectType::Rectangle )
 		, m_objectData( shape )
 	{
 		Reflex::CenterOrigin( m_objectData.rectShape );
-		m_objectData.rectShape.setFillColor( colour );
+		if( colour )
+			m_objectData.rectShape.setFillColor( *colour );
 	}
 
-	SFMLObject::SFMLObject( const Reflex::Object& owner, const sf::Sprite& sprite, const sf::Color& colour )
+	SFMLObject::SFMLObject( const Reflex::Object& owner, const sf::Sprite& sprite, const std::optional< sf::Color > colour )
 		: Component< SFMLObject >( owner )
 		, m_type( SFMLObjectType::Sprite )
 		, m_objectData( sprite )
 	{
 		Reflex::CenterOrigin( m_objectData.sprite );
-		m_objectData.sprite.setColor( colour );
+		if( colour )
+			m_objectData.sprite.setColor( *colour );
 	}
 
-	SFMLObject::SFMLObject( const Reflex::Object& owner, const sf::Text& text, const sf::Color& colour )
+	SFMLObject::SFMLObject( const Reflex::Object& owner, const sf::Text& text, const std::optional< sf::Color > colour )
 		: Component< SFMLObject >( owner )
 		, m_type( SFMLObjectType::Text )
 		, m_objectData( text )
 	{
 		Reflex::CenterOrigin( m_objectData.text );
-		m_objectData.text.setFillColor( colour );
+		if( colour )
+			m_objectData.text.setFillColor( *colour );
 	}
 
 	SFMLObject::SFMLObject( const SFMLObject& other )

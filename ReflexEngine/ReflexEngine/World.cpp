@@ -22,7 +22,7 @@ namespace Reflex::Core
 		: m_context( context )
 		, m_worldView( context.window.getDefaultView() )
 		, m_worldBounds( worldBounds )
-		, m_tileMap( 100, 10 )
+		, m_tileMap( 200, 20 )
 	{
 		Setup();
 	}
@@ -250,9 +250,9 @@ namespace Reflex::Core
 			return false;
 
 		auto* component = static_cast< Reflex::Components::BaseComponent* >( m_components[family]->Get( object.GetIndex() ) );
-		m_objects.components[object.GetIndex()].reset( family );
-		OnComponentRemoved( object ); 
+		OnComponentRemoved( object );
 		component->OnDestructionBegin();
+		m_objects.components[object.GetIndex()].reset( family );
 		m_components[family].get()->Destroy( object.GetIndex() );
 		return true;
 	}
@@ -367,8 +367,9 @@ namespace Reflex::Core
 			if( found == system->m_releventObjects.end() )
 				continue;
 
+			const auto toRemove = *found;
 			system->m_releventObjects.erase( found );
-			system->OnComponentRemoved( *found );
+			system->OnComponentRemoved( toRemove );
 		}
 	}
 

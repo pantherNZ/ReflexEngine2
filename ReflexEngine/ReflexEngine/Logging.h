@@ -3,7 +3,7 @@
 // Includes
 #include "VectorMap.h"
 
-#define PROFILING
+//#define PROFILING
 #define LOGGING
 
 namespace Reflex

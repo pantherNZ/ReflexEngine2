@@ -20,11 +20,11 @@ namespace Reflex::Components
 	{
 	public:
 		SFMLObject( const Reflex::Object& owner );
-		SFMLObject( const Reflex::Object& owner, const sf::CircleShape& shape, const sf::Color& colour = sf::Color::White );
-		SFMLObject( const Reflex::Object& owner, const sf::ConvexShape& shape, const sf::Color& colour = sf::Color::White );
-		SFMLObject( const Reflex::Object& owner, const sf::RectangleShape& shape, const sf::Color& colour = sf::Color::White );
-		SFMLObject( const Reflex::Object& owner, const sf::Sprite& spriteconst, const sf::Color& colour = sf::Color::White );
-		SFMLObject( const Reflex::Object& owner, const sf::Text& text, const sf::Color& colour = sf::Color::White );
+		SFMLObject( const Reflex::Object& owner, const sf::CircleShape& shape, const std::optional< sf::Color > colour = std::nullopt );
+		SFMLObject( const Reflex::Object& owner, const sf::ConvexShape& shape, const std::optional< sf::Color > colour = std::nullopt );
+		SFMLObject( const Reflex::Object& owner, const sf::RectangleShape& shape, const std::optional< sf::Color > colour = std::nullopt );
+		SFMLObject( const Reflex::Object& owner, const sf::Sprite& spriteconst, const std::optional< sf::Color > colour = std::nullopt );
+		SFMLObject( const Reflex::Object& owner, const sf::Text& text, const std::optional< sf::Color > colour = std::nullopt );
 		SFMLObject( const SFMLObject& other );
 		~SFMLObject() { }
 
@@ -60,6 +60,7 @@ namespace Reflex::Components
 		}
 
 	protected:
+		bool IsRenderComponent() const final { return true; }
 		void Render( sf::RenderTarget& target, sf::RenderStates states ) const final;
 
 	private:

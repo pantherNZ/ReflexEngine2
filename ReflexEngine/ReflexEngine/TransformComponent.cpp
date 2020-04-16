@@ -38,11 +38,13 @@ namespace Reflex::Components
 
 	void Transform::OnDestructionBegin()
 	{
+#ifndef DISABLE_TILEMAP
 		if( m_useTileMap )
 		{
 			auto& tileMap = m_object.GetWorld().GetTileMap();
 			tileMap.Remove( Component::GetObject() );
 		}
+#endif
 	}
 
 	bool Transform::SetValue( const std::string& variable, const std::string& value )
@@ -85,8 +87,7 @@ namespace Reflex::Components
 
 	void Transform::setPosition( const sf::Vector2f& position )
 	{
-
-
+#ifndef DISABLE_TILEMAP
 		if( m_useTileMap )
 		{
 			auto& tileMap = GetWorld().GetTileMap();
@@ -105,6 +106,7 @@ namespace Reflex::Components
 
 			return;
 		}
+#endif
 
 		sf::Transformable::setPosition( position );
 	}

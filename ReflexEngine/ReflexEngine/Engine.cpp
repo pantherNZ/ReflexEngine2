@@ -59,6 +59,7 @@ namespace Reflex::Core
 	{
 		srand( (unsigned )time( 0 ) );
 		m_window.setPosition( sf::Vector2i( -6, 0 ) );
+		m_window.setVerticalSyncEnabled( false );
 		ImGui::SFML::Init( m_window );
 
 		if( m_profilingEnabled )
@@ -87,8 +88,9 @@ namespace Reflex::Core
 					Profiler::GetProfiler().FrameTick( deltaTime.asMicroseconds() );
 
 				accumlatedTime += deltaTime;
+				unsigned counter = 0;
 
-				while( accumlatedTime > m_updateInterval )
+				while( accumlatedTime > m_updateInterval && ++counter < 10 )
 				{
 					accumlatedTime -= m_updateInterval;
 					ProcessEvents();
@@ -99,7 +101,7 @@ namespace Reflex::Core
 				{
 					ImGui::SFML::Update( m_window, deltaTime );
 					Render();
-					UpdateStatistics( deltaTime.asSeconds(), clock.getElapsedTime().asMilliseconds() );
+					UpdateStatistics( ( int )deltaTime.asMicroseconds(), ( int )clock.getElapsedTime().asMicroseconds() );
 				}
 
 				const auto targetFPS = sf::seconds( 1.0f / m_fpsLimit );
@@ -175,6 +177,8 @@ namespace Reflex::Core
 		ImGui::InputInt( "FPS Limit", &m_fpsLimit, 1, 10 );
 		m_fpsLimit = std::max( 0, m_fpsLimit );
 
+		ImGui::Text( Stream( "Mouse Pos: " << ImGui::GetMousePos().x << ", " << ImGui::GetMousePos().y ).c_str() );
+
 		ImGui::NewLine();
 
 		ImGui::Checkbox( "Show ImGui Metrics", &m_showMetrics );
@@ -196,29 +200,45 @@ namespace Reflex::Core
 		m_window.display();
 	}
 
-	void Engine::UpdateStatistics( const float deltaTime, const int frameTimeMS )
+	void Engine::UpdateStatistics( const int deltaTimeUS, const int frameTimeUS )
 	{
-		m_statisticsUpdateTime += sf::seconds( deltaTime );
-		m_statisticsNumFrames += 1;
-		const auto interval = sf::seconds( 0.2f );
+		if( idx == -1 )
+		{
+			idx = 0;
+			frames[idx].deltaTimeUS = deltaTimeUS;
+			frames[idx].frameTimeUS = frameTimeUS;
+			totalDeltaUS += deltaTimeUS;
+			totalTimeUS += frameTimeUS;
+		}
+		else
+		{
+			idx = ( idx + 1 ) % NumSamples;
+			totalDeltaUS -= frames[idx].deltaTimeUS;
+			totalTimeUS -= frames[idx].frameTimeUS;
+			frames[idx].deltaTimeUS = deltaTimeUS;
+			frames[idx].frameTimeUS = frameTimeUS;
+			totalDeltaUS += deltaTimeUS;
+			totalTimeUS += frameTimeUS;
+		}
+
+		m_statisticsUpdateTime += sf::microseconds( deltaTimeUS );
+		const auto interval = sf::seconds( 1.0f );
 
 		if( m_statisticsUpdateTime >= interval )
 		{
 			std::stringstream ss;
-			const auto totalFrames = m_statisticsNumFrames * ( 1.0f / interval.asSeconds() );
-			ss << "FPS: " << std::to_string( totalFrames ) << "\nFrame Time: ";
+			ss << "FPS: " << std::to_string( int( 1.0f / ( totalDeltaUS / ( float )NumSamples / 1000.0f / 1000.0f ) ) ) << "\nFrame Time: ";
 			
-			const auto ms_per_frame = frameTimeMS / ( float )totalFrames;
+			const auto ms_per_frame = ( totalTimeUS / ( float )NumSamples ) / 1000.0f;
 			if( ms_per_frame > 0 )
 				ss << std::fixed << std::setprecision( 2 ) << ms_per_frame << "ms";
 			else
-				ss << ( m_statisticsUpdateTime.asMicroseconds() / totalFrames ) << "us";
+				ss << int( totalTimeUS / ( float )NumSamples ) << "us";
 
 			ss << "\nDuration: " << ( int )m_totalTime.getElapsedTime().asSeconds() << "s";
 
 			m_statisticsText = ss.str();
 			m_statisticsUpdateTime -= interval;
-			m_statisticsNumFrames = 0;
 		}
 	}
 }

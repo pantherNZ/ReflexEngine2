@@ -100,6 +100,7 @@ namespace Reflex::Core
 		FontManager& GetFontManager() { return m_context.fontManager; }
 		EventManager& GetEventManager() { return eventManager; }
 		TileMap& GetTileMap() { return m_tileMap; }
+		const TileMap& GetTileMap() const { return m_tileMap; }
 
 		sf::FloatRect GetBounds() const;
 		Reflex::Handle< Reflex::Components::Transform > GetSceneRoot() const;

@@ -49,7 +49,8 @@ namespace Reflex::Core
 			if( node == m_children[i] )
 			{
 				if( m_children[i] )
-					m_children[i].GetTransform()->m_parent = Reflex::Object();
+					if( const auto transform = m_children[i].GetTransform() )
+						transform->m_parent = Reflex::Object();
 
 				m_children.erase( m_children.begin() + i );
 				return node;

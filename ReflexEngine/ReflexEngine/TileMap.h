@@ -33,13 +33,13 @@ namespace Reflex::Core
 		void GetNearby( const sf::FloatRect& boundary, std::vector< Object >& out ) const;
 
 		template< typename Func >
-		void ForEachNearby( const BaseObject& object, const float distance, Func f ) const;
+		void ForEachInRange( const BaseObject& object, const float distance, Func f ) const;
 
 		template< typename Func >
-		void ForEachNearby( const sf::Vector2f& position, const float distance, Func f ) const;
+		void ForEachInRange( const sf::Vector2f& position, const float distance, Func f ) const;
 
 		template< typename Func >
-		void ForEachNearby( const sf::FloatRect& boundary, Func f ) const;
+		void ForEachInBounds( const sf::FloatRect& boundary, Func f ) const;
 
 	protected:
 		unsigned GetCellId( const Object& obj ) const;
@@ -56,6 +56,13 @@ namespace Reflex::Core
 		bool IsValid() const;
 		bool IsValid( const BaseObject& obj ) const;
 
+		template< typename Func >
+		void ForEachInBoundsInternal( const sf::FloatRect& boundary, Func f ) const;
+
+	private:
+		struct Chunk;
+		std::vector< TileMap::Chunk >::iterator FindChunk( const sf::Vector2i& chunkIdx );
+
 	private:
 		unsigned m_cellSize = 0U;
 		unsigned m_chunkSizeInCells = 0U;
@@ -63,36 +70,43 @@ namespace Reflex::Core
 
 		struct Chunk
 		{
+			sf::Vector2i chunk;
 			std::vector< std::vector< BaseObject > > buckets;
 			unsigned totalObjects = 0;
 		};
-		std::unordered_map< sf::Vector2i, Chunk > m_spacialChunks;
+		std::vector< Chunk > m_spacialChunks;
 	};
 
 	// Template function definitions
 	template< typename Func >
-	void TileMap::ForEachNearby( const BaseObject& object, const float distance, Func f ) const
+	void TileMap::ForEachInRange( const BaseObject& object, const float distance, Func f ) const
 	{
-		ForEachNearby( GetObjectPosition( object ), distance, f );
+		ForEachInRange( GetObjectPosition( object ), distance, f );
 	}
 
 	template< typename Func >
-	void TileMap::ForEachNearby( const sf::Vector2f& position, const float distance, Func f ) const
+	void TileMap::ForEachInRange( const sf::Vector2f& position, const float distance, Func f ) const
 	{
-		if( IsValid() )
+		sf::FloatRect bounds( position - sf::Vector2f( distance, distance ), sf::Vector2f( distance, distance ) * 2.0f );
+		ForEachInBoundsInternal( bounds, [&]( const Reflex::Object& object )
 		{
-			const auto cell = CellHash( position );
-			const auto chunkIdx = sf::Vector2i( cell.x / ( int )m_chunkSizeInCells, cell.y / (int )m_chunkSizeInCells );
-			const auto& bucket = m_spacialChunks.at( chunkIdx ).buckets[cell.y * m_chunkSizeInCells + cell.x];
-
-			for( const auto& object : bucket )
-				if( Reflex::GetDistanceSq( position, Object( object ).GetTransform()->getPosition() ) <= distance * distance )
-					f( Object( object ) );
-		}
+			if( Reflex::GetDistanceSq( position, object.GetTransform()->getPosition() ) <= distance * distance )
+				f( object );
+		} );
 	}
 
 	template< typename Func >
-	void TileMap::ForEachNearby( const sf::FloatRect& boundary, Func f ) const
+	void TileMap::ForEachInBounds( const sf::FloatRect& boundary, Func f ) const
+	{
+		ForEachInBoundsInternal( boundary, [&]( const Reflex::Object& object )
+		{
+			if( boundary.intersects( object.GetTransform()->GetGlobalBounds() ) )
+				f( object );
+		} );
+	}
+
+	template< typename Func >
+	void TileMap::ForEachInBoundsInternal( const sf::FloatRect& boundary, Func f ) const
 	{
 		if( IsValid() )
 		{
@@ -105,11 +119,20 @@ namespace Reflex::Core
 				for( int y = locTopLeft.y; y <= locBotRight.y; ++y )
 				{
 					const auto chunkIdx = sf::Vector2i( x / ( int )m_chunkSizeInCells, y / ( int )m_chunkSizeInCells );
-					const auto& bucket = m_spacialChunks.at( chunkIdx ).buckets[y * m_chunkSizeInCells + x];
+					const auto chunk_iter = std::find_if( m_spacialChunks.begin(), m_spacialChunks.end(), [&]( const Chunk& chunk )
+					{
+						return chunk.chunk == chunkIdx;
+					} );
+					
+					if( chunk_iter == m_spacialChunks.end() )
+						continue;
+
+					const auto cellId = ( y % m_chunkSizeInCells ) * m_chunkSizeInCells + x % m_chunkSizeInCells;
+					//const auto& bucket = m_spacialChunks[0].buckets[cellId];
+					const auto& bucket = chunk_iter->buckets[cellId];
 
 					for( const auto& obj : bucket )
-						if( boundary.intersects( Object( obj ).GetTransform()->GetGlobalBounds() ) )
-							f( Object( obj ) );
+						f( Object( obj ) );
 				}
 			}
 		}
