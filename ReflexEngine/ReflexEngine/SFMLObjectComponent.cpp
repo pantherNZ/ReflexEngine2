@@ -4,224 +4,156 @@
 
 namespace Reflex::Components
 {
-	void SFMLObject::Render( sf::RenderTarget& target, sf::RenderStates states ) const
+	CircleShape::CircleShape( const Reflex::Object& owner, const float radius, const std::size_t pointCount, const std::optional< sf::Color > colour )
+		: Component< CircleShape >( owner )
+		, sf::CircleShape( radius, pointCount )
 	{
-		switch( GetType() )
-		{
-		case Components::SFMLObjectType::Rectangle:
-			target.draw( GetRectangleShape(), states );
-			break;
-		case Components::SFMLObjectType::Convex:
-			target.draw( GetConvexShape(), states );
-			break;
-		case Components::SFMLObjectType::Circle:
-			target.draw( GetCircleShape(), states );
-			break;
-		case Components::SFMLObjectType::Sprite:
-			target.draw( GetSprite(), states );
-			break;
-		case Components::SFMLObjectType::Text:
-			target.draw( GetText(), states );
-			break;
-		}
-	}
-
-	SFMLObject::SFMLObject( const Reflex::Object& owner )
-		: Component< SFMLObject >( owner )
-	{
-
-	}
-
-	SFMLObject::SFMLObject( const Reflex::Object& owner, const sf::CircleShape& shape, const std::optional< sf::Color > colour )
-		: Component< SFMLObject >( owner )
-		, m_type( SFMLObjectType::Circle )
-		, m_objectData( shape )
-	{
-		Reflex::CenterOrigin( m_objectData.circleShape );
 		if( colour )
-			m_objectData.circleShape.setFillColor( *colour );
+			setFillColor( *colour );
 	}
 
-	SFMLObject::SFMLObject( const Reflex::Object& owner, const sf::ConvexShape& shape, const std::optional< sf::Color > colour )
-		: Component< SFMLObject >( owner )
-		, m_type( SFMLObjectType::Convex )
-		, m_objectData( shape )
+	CircleShape::CircleShape( const Reflex::Object& owner, const std::optional< sf::Color > colour )
+		: Component< CircleShape >( owner )
 	{
-		Reflex::CenterOrigin( m_objectData.convexShape );
-		
 		if( colour )
-			m_objectData.convexShape.setFillColor( *colour );
+			setFillColor( *colour );
 	}
 
-	SFMLObject::SFMLObject( const Reflex::Object& owner, const sf::RectangleShape& shape, const std::optional< sf::Color > colour )
-		: Component< SFMLObject >( owner )
-		, m_type( SFMLObjectType::Rectangle )
-		, m_objectData( shape )
+	RectangleShape::RectangleShape( const Reflex::Object& owner, const sf::Vector2f& size, const std::optional< sf::Color > colour )
+		: Component< RectangleShape >( owner )
+		, sf::RectangleShape( size )
 	{
-		Reflex::CenterOrigin( m_objectData.rectShape );
 		if( colour )
-			m_objectData.rectShape.setFillColor( *colour );
+			setFillColor( *colour );
 	}
 
-	SFMLObject::SFMLObject( const Reflex::Object& owner, const sf::Sprite& sprite, const std::optional< sf::Color > colour )
-		: Component< SFMLObject >( owner )
-		, m_type( SFMLObjectType::Sprite )
-		, m_objectData( sprite )
+	RectangleShape::RectangleShape( const Reflex::Object& owner, const std::optional< sf::Color > colour )
+		: Component< RectangleShape >( owner )
 	{
-		Reflex::CenterOrigin( m_objectData.sprite );
 		if( colour )
-			m_objectData.sprite.setColor( *colour );
+			setFillColor( *colour );
 	}
 
-	SFMLObject::SFMLObject( const Reflex::Object& owner, const sf::Text& text, const std::optional< sf::Color > colour )
-		: Component< SFMLObject >( owner )
-		, m_type( SFMLObjectType::Text )
-		, m_objectData( text )
+	ConvexShape::ConvexShape( const Reflex::Object& owner, const std::size_t pointCount, const std::optional< sf::Color > colour )
+		: Component< ConvexShape >( owner )
+		, sf::ConvexShape( pointCount )
 	{
-		Reflex::CenterOrigin( m_objectData.text );
 		if( colour )
-			m_objectData.text.setFillColor( *colour );
+			setFillColor( *colour );
 	}
 
-	SFMLObject::SFMLObject( const SFMLObject& other )
-		: Component< SFMLObject >( other )
-		, m_type( other.m_type )
+	ConvexShape::ConvexShape( const Reflex::Object& owner, const std::vector< sf::Vector2f >& points, const std::optional< sf::Color > colour )
+		: Component< ConvexShape >( owner )
+		, sf::ConvexShape( points.size() )
 	{
-		memcpy( &this->m_objectData, &other.m_objectData, sizeof( ObjectType ) );
+		for( size_t i = 0; i < points.size(); ++i )
+			setPoint( i, points[i] );
+
+		if( colour )
+			setFillColor( *colour );
 	}
 
-	sf::CircleShape& SFMLObject::GetCircleShape()
+	ConvexShape::ConvexShape( const Reflex::Object& owner, const std::optional< sf::Color > colour )
+		: Component< ConvexShape >( owner )
 	{
-		return m_objectData.circleShape;
+		if( colour )
+			setFillColor( *colour );
 	}
 
-	const sf::CircleShape& SFMLObject::GetCircleShape() const
+	Sprite::Sprite( const Reflex::Object& owner, const sf::Texture& texture, const std::optional< sf::Color > colour )
+		: Component< Sprite >( owner )
+		, sf::Sprite( texture )
 	{
-		return m_objectData.circleShape;
+		if( colour )
+			setColor( *colour );
 	}
 
-	sf::RectangleShape& SFMLObject::GetRectangleShape()
+	Sprite::Sprite( const Reflex::Object& owner, const sf::Texture& texture, const sf::IntRect& rectangle, const std::optional< sf::Color > colour )
+		: Component< Sprite >( owner )
+		, sf::Sprite( texture, rectangle )
 	{
-		return m_objectData.rectShape;
+		if( colour )
+			setColor( *colour );
+	}
+	
+	Sprite::Sprite( const Reflex::Object& owner, const std::optional< sf::Color > colour )
+		: Component< Sprite >( owner )
+	{
+		if( colour )
+			setColor( *colour );
 	}
 
-	const sf::RectangleShape& SFMLObject::GetRectangleShape() const
+	Text::Text( const Reflex::Object& owner, const sf::String& string, const sf::Font& font, const unsigned characterSize, const std::optional< sf::Color > colour )
+		: Component< Text >( owner )
+		, sf::Text( string, font, characterSize )
 	{
-		return m_objectData.rectShape;
+		if( colour )
+			setFillColor( *colour );
 	}
 
-	sf::ConvexShape& SFMLObject::GetConvexShape()
+	Text::Text( const Reflex::Object& owner, const std::optional< sf::Color > colour )
+		: Component< Text >( owner )
 	{
-		return m_objectData.convexShape;
+		if( colour )
+			setFillColor( *colour );
 	}
 
-	const sf::ConvexShape& SFMLObject::GetConvexShape() const
+	TODO( "SFML object set values (deserialisation" );
+	bool CircleShape::SetValue( const std::string& variable, const std::string& value )
 	{
-		return m_objectData.convexShape;
-	}
-
-	sf::Sprite& SFMLObject::GetSprite()
-	{
-		return m_objectData.sprite;
-	}
-
-	const sf::Sprite& SFMLObject::GetSprite() const
-	{
-		return m_objectData.sprite;
-	}
-
-	sf::Text& SFMLObject::GetText()
-	{
-		return m_objectData.text;
-	}
-
-	const sf::Text& SFMLObject::GetText() const
-	{
-		return m_objectData.text;
-	}
-
-	const Reflex::Components::SFMLObjectType SFMLObject::GetType() const
-	{
-		return m_type;
-	}
-
-	namespace
-	{
-		std::string objectNames[] =
-		{
-			"Invalid",
-			"Circle",
-			"Rectangle",
-			"Convex",
-			"Sprite",
-			"Text",
-		};
-
-		static_assert( std::size( objectNames ) == ( size_t )SFMLObjectType::NumTypes );
-	}
-
-	bool SFMLObject::SetValue( const std::string& variable, const std::string& value )
-	{
-		if( variable == "Type" )
-		{
-			for( unsigned i = 0; i < std::size( objectNames ); ++i )
-			{
-				if( value == objectNames[i] )
-				{
-					m_type = SFMLObjectType( i );
-					return true;
-				}
-			}
-		}
-
 		return false;
 	}
 
-	void SFMLObject::GetValues( std::vector< std::pair< std::string, std::string > >& values ) const
+	bool RectangleShape::SetValue( const std::string& variable, const std::string& value )
 	{
-		values.emplace_back( "Type", objectNames[( size_t )m_type] );
+		return false;
+	}
 
-		const auto GetShapeValues = [&values]( const sf::Shape& shape )
-		{
-			values.emplace_back( "PointCount", Reflex::ToString( shape.getPointCount() ) );
-			values.emplace_back( "Points", "" );
-			for( size_t i = 0; i < shape.getPointCount(); ++i )
-				values.back().second += ( i > 0 ? ", " : "" ) + Reflex::ToString( shape.getPoint( i ) );
-		};
+	bool ConvexShape::SetValue( const std::string& variable, const std::string& value )
+	{
+		return false;
+	}
 
-		switch( m_type )
-		{
-		case Reflex::Components::SFMLObjectType::Circle:
-		{
-			values.emplace_back( "Radius", Reflex::ToString( GetCircleShape().getRadius() ) );
-			GetShapeValues( GetCircleShape() );
-			GetColourValues( values, GetCircleShape() );
-			break;
-		}
-		case Reflex::Components::SFMLObjectType::Rectangle:
-			GetShapeValues( GetRectangleShape() );
-			GetColourValues( values, GetCircleShape() );
-			break;
-		case Reflex::Components::SFMLObjectType::Convex:
-			GetShapeValues( GetRectangleShape() );
-			GetColourValues( values, GetConvexShape() );
-			break;
-		case Reflex::Components::SFMLObjectType::Sprite:
-		{
-			if( !Reflex::IsDefault( GetSprite().getColor() ) )
-				values.emplace_back( "Colour", Reflex::ToString( GetSprite().getColor() ) );
-			break;
-		}
-		case Reflex::Components::SFMLObjectType::Text:
-		{
-			GetColourValues( values, GetText() );
-			values.emplace_back( "String", GetText().getString() );
-			values.emplace_back( "Style", Reflex::ToString( GetText().getStyle() ) );
-			break;
-		}
-		case Reflex::Components::SFMLObjectType::Invalid:
-		case Reflex::Components::SFMLObjectType::NumTypes:
-			break;
-		}
+	bool Sprite::SetValue( const std::string& variable, const std::string& value )
+	{
+		return false;
+	}
+
+	bool Text::SetValue( const std::string& variable, const std::string& value )
+	{
+		return false;
+	}
+
+	void CircleShape::GetValues( std::vector< std::pair< std::string, std::string > >& values ) const
+	{
+		values.emplace_back( "Radius", Reflex::ToString( getRadius() ) );
+		GetShapeValues( values, *this);
+		GetColourValues( values, *this );
+	}
+
+	void RectangleShape::GetValues( std::vector< std::pair< std::string, std::string > >& values ) const
+	{
+		GetShapeValues( values, *this );
+		GetColourValues( values, *this );
+	}
+
+	void ConvexShape::GetValues( std::vector< std::pair< std::string, std::string > >& values ) const
+	{
+		GetShapeValues( values, *this );
+		GetColourValues( values, *this );
+	}
+
+	void Sprite::GetValues( std::vector< std::pair< std::string, std::string > >& values ) const
+	{
+		TODO( "Serialise sprite texture somehow" );
+		if( !Reflex::IsDefault( getColor() ) )
+			values.emplace_back( "Colour", Reflex::ToString( getColor() ) );
+	}
+
+	void Text::GetValues( std::vector< std::pair< std::string, std::string > >& values ) const
+	{
+		GetColourValues( values, *this );
+		values.emplace_back( "String", getString() );
+		values.emplace_back( "Style", Reflex::ToString( getStyle() ) );
 	}
 }

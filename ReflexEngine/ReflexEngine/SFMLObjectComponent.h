@@ -4,84 +4,90 @@
 
 namespace Reflex::Components
 {
-	enum class SFMLObjectType : char
-	{
-		Invalid,
-		Circle,
-		Rectangle,
-		Convex,
-		Sprite,
-		Text,
-		NumTypes
-	};
-
 	// Class definition
-	class SFMLObject : public Component< SFMLObject >
+	class CircleShape : public Component< CircleShape >, public sf::CircleShape
 	{
 	public:
-		SFMLObject( const Reflex::Object& owner );
-		SFMLObject( const Reflex::Object& owner, const sf::CircleShape& shape, const std::optional< sf::Color > colour = std::nullopt );
-		SFMLObject( const Reflex::Object& owner, const sf::ConvexShape& shape, const std::optional< sf::Color > colour = std::nullopt );
-		SFMLObject( const Reflex::Object& owner, const sf::RectangleShape& shape, const std::optional< sf::Color > colour = std::nullopt );
-		SFMLObject( const Reflex::Object& owner, const sf::Sprite& spriteconst, const std::optional< sf::Color > colour = std::nullopt );
-		SFMLObject( const Reflex::Object& owner, const sf::Text& text, const std::optional< sf::Color > colour = std::nullopt );
-		SFMLObject( const SFMLObject& other );
-		~SFMLObject() { }
+		explicit CircleShape( const Reflex::Object& owner, const float radius, const std::size_t pointCount = 30, const std::optional< sf::Color > colour = std::nullopt );
+		explicit CircleShape( const Reflex::Object& owner, const std::optional< sf::Color > colour = std::nullopt );
 
+		static std::string GetComponentName() { return "CircleShape"; }
 		bool SetValue( const std::string& variable, const std::string& value ) override;
 		void GetValues( std::vector< std::pair< std::string, std::string > >& values ) const override;
-		static std::string GetComponentName() { return "SFMLObject"; }
-
-		// Get functions
-		sf::CircleShape& GetCircleShape();
-		const sf::CircleShape& GetCircleShape() const;
-
-		sf::RectangleShape& GetRectangleShape();
-		const sf::RectangleShape& GetRectangleShape() const;
-
-		sf::ConvexShape& GetConvexShape();
-		const sf::ConvexShape& GetConvexShape() const;
-
-		sf::Sprite& GetSprite();
-		const sf::Sprite& GetSprite() const;
-
-		sf::Text& GetText();
-		const sf::Text& GetText() const;
-
-		const SFMLObjectType GetType() const;
-
-		template< typename T >
-		void GetColourValues( std::vector< std::pair< std::string, std::string > >& values, const T& shape ) const
-		{
-			if( !Reflex::IsDefault( shape.getFillColor() ) )
-				values.emplace_back( "FillColour", Reflex::ToString( shape.getFillColor() ) );
-			if( !Reflex::IsDefault( shape.getOutlineColor() ) )
-				values.emplace_back( "OutlineColour", Reflex::ToString( shape.getOutlineColor() ) );
-		}
-
-	protected:
 		bool IsRenderComponent() const final { return true; }
-		void Render( sf::RenderTarget& target, sf::RenderStates states ) const final;
-
-	private:
-		union ObjectType
-		{
-			sf::CircleShape circleShape;			// 292 bytes
-			sf::RectangleShape rectShape;			// 292 bytes
-			sf::ConvexShape convexShape;			// 300 bytes
-			sf::Sprite sprite;						// 272 bytes
-			sf::Text text;							// 280 bytes
-
-			ObjectType() {}
-			ObjectType( const sf::CircleShape& shape ) : circleShape( shape ) { }
-			ObjectType( const sf::RectangleShape& shape ) : rectShape( shape ) { }
-			ObjectType( const sf::ConvexShape& shape ) : convexShape( shape ) { }
-			ObjectType( const sf::Sprite& sprite ) : sprite( sprite ) { }
-			ObjectType( const sf::Text& text ) : text( text ) { }
-			~ObjectType() {}
-		};
-
-		ObjectType m_objectData;
-		SFMLObjectType m_type = SFMLObjectType::Invalid;
+		void Render( sf::RenderTarget& target, sf::RenderStates states ) const final { target.draw( *this, states ); }
 	};
+
+	class RectangleShape : public Component< RectangleShape >, public sf::RectangleShape
+	{
+	public:
+		explicit RectangleShape( const Reflex::Object& owner, const sf::Vector2f& size, const std::optional< sf::Color > colour = std::nullopt );
+		explicit RectangleShape( const Reflex::Object& owner, const std::optional< sf::Color > colour = std::nullopt );
+
+		static std::string GetComponentName() { return "RectangleShape"; }
+		bool SetValue( const std::string& variable, const std::string& value ) override;
+		void GetValues( std::vector< std::pair< std::string, std::string > >& values ) const override;
+		bool IsRenderComponent() const final { return true; }
+		void Render( sf::RenderTarget& target, sf::RenderStates states ) const final { target.draw( *this, states ); }
+	};
+
+	class ConvexShape : public Component< ConvexShape >, public sf::ConvexShape
+	{
+	public:
+		explicit ConvexShape( const Reflex::Object& owner, const std::size_t pointCount, const std::optional< sf::Color > colour = std::nullopt );
+		explicit ConvexShape( const Reflex::Object& owner, const std::vector< sf::Vector2f >& points, const std::optional< sf::Color > colour = std::nullopt );
+		explicit ConvexShape( const Reflex::Object& owner, const std::optional< sf::Color > colour = std::nullopt );
+
+		static std::string GetComponentName() { return "ConvexShape"; }
+		bool SetValue( const std::string& variable, const std::string& value ) override;
+		void GetValues( std::vector< std::pair< std::string, std::string > >& values ) const override;
+		bool IsRenderComponent() const final { return true; }
+		void Render( sf::RenderTarget& target, sf::RenderStates states ) const final { target.draw( *this, states ); }
+	};
+
+	class Sprite : public Component< Sprite >, public sf::Sprite
+	{
+	public:
+		explicit Sprite( const Reflex::Object& owner, const sf::Texture& texture, const std::optional< sf::Color > colour = std::nullopt );
+		explicit Sprite( const Reflex::Object& owner, const sf::Texture& texture, const sf::IntRect& rectangle, const std::optional< sf::Color > colour = std::nullopt );
+		explicit Sprite( const Reflex::Object& owner, const std::optional< sf::Color > colour = std::nullopt );
+
+		static std::string GetComponentName() { return "Sprite"; }
+		bool SetValue( const std::string& variable, const std::string& value ) override;
+		void GetValues( std::vector< std::pair< std::string, std::string > >& values ) const override;
+		bool IsRenderComponent() const final { return true; }
+		void Render( sf::RenderTarget& target, sf::RenderStates states ) const final { target.draw( *this, states ); }
+	};
+
+	class Text : public Component< Text >, public sf::Text
+	{
+	public:
+		explicit Text( const Reflex::Object& owner, const sf::String& string, const sf::Font& font, const unsigned characterSize = 30, const std::optional< sf::Color > colour = std::nullopt );
+		explicit Text( const Reflex::Object& owner, const std::optional< sf::Color > colour = std::nullopt );
+
+		static std::string GetComponentName() { return "Text"; }
+		bool SetValue( const std::string& variable, const std::string& value ) override;
+		void GetValues( std::vector< std::pair< std::string, std::string > >& values ) const override;
+		bool IsRenderComponent() const final { return true; }
+		void Render( sf::RenderTarget& target, sf::RenderStates states ) const final { target.draw( *this, states ); }
+	};
+
+	template< typename V >
+	void GetColourValues( std::vector< std::pair< std::string, std::string > >& values, const V& shape )
+	{
+		if( !Reflex::IsDefault( shape.getFillColor() ) )
+			values.emplace_back( "FillColour", Reflex::ToString( shape.getFillColor() ) );
+		if( !Reflex::IsDefault( shape.getOutlineColor() ) )
+			values.emplace_back( "OutlineColour", Reflex::ToString( shape.getOutlineColor() ) );
+	}
+
+	template< typename V >
+	void GetShapeValues( std::vector< std::pair< std::string, std::string > >& values, const V& shape )
+	{
+		values.emplace_back( "PointCount", Reflex::ToString( shape.getPointCount() ) );
+		values.emplace_back( "Points", "" );
+		for( size_t i = 0; i < shape.getPointCount(); ++i )
+			values.back().second += ( i > 0 ? ", " : "" ) + Reflex::ToString( shape.getPoint( i ) );
+	}
+
 }

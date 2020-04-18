@@ -123,17 +123,6 @@ namespace Reflex::Systems
 		const auto pos = boid->GetTransform()->getPosition();
 		unsigned counter = 0;
 
-		static bool t = true;
-
-		if( boid->b && t )
-		{
-			t = false;
-
-			if( auto sfmlObj = boid->GetObject().GetComponent< Reflex::Components::SFMLObject >() )
-				sfmlObj->GetCircleShape().setFillColor( Reflex::ColourFromScalar( 0.3f ) );
-		}
-
-		
 #ifndef DISABLE_TILEMAP
 		GetWorld().GetTileMap().ForEachInRange( pos, boid->m_neighbourRange, [&]( const Reflex::Object& nearby )
 		{
@@ -157,10 +146,6 @@ namespace Reflex::Systems
 			alignment += nearbyTransform->GetVelocity();
 			cohesion += nearbyPos;
 			separation += pos - nearbyPos;
-
-			if( boid->b )
-				if( auto sfmlObj = nearby.GetComponent< Reflex::Components::SFMLObject >() )
-					sfmlObj->GetCircleShape().setFillColor( Reflex::ColourFromScalar( 0.5f ) );
 		} );
 
 		if( counter )

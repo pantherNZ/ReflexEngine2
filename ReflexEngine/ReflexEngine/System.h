@@ -15,12 +15,6 @@ namespace Reflex::Systems
 	GetWorld().RegisterComponent< T >(); \
 	m_requiredComponents.set( T::GetFamily() );
 
-	//struct SystemData
-	//{
-	//	Reflex::Object object;
-	//};
-
-	//template< typename T = SystemData >
 	class System : public BaseSystem
 	{
 	public:
@@ -51,7 +45,6 @@ namespace Reflex::Systems
 		}
 
 	protected:
-	//	std::vector< T > m_releventObjects;
 		std::vector< Reflex::Object > m_releventObjects;
 	};
 }

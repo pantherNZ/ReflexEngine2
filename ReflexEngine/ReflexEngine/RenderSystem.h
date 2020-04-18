@@ -10,8 +10,7 @@ namespace Reflex::Systems
 	public:
 		using System::System;
 
-		void RegisterComponents() final;
-
+		void RegisterComponents() final { }
 		bool ShouldAddObject( const Object& object ) const final;
 		void AddComponent( const Object& object ) final;
 		void OnComponentAdded( const Reflex::Object& object ) final;

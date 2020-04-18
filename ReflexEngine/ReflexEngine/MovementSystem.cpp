@@ -25,6 +25,9 @@ namespace Reflex
 					{
 						const auto newPos = Reflex::WrapAround( transform->getPosition() + transform->GetVelocity() * deltaTime, GetWorld().GetBounds() );
 						transform->setPosition( newPos );
+
+						if( transform->FacesMovementDirection() )
+							transform->setRotation( TODEGREES( Reflex::RotationFromVector( transform->GetVelocity() ) ) );
 					}
 
 					if( transform->m_rotateDurationSec > 0.0f )

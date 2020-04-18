@@ -492,7 +492,8 @@ namespace Reflex
 	{
 		return Vector2fToVector2i( RotateAroundPoint( Vector2iToVector2f( position ), Vector2iToVector2f( rotateAround ), angleDegrees ) );
 	}
-
+	
+	// Returns a rotation from a vector in radians
 	inline float RotationFromVector( const sf::Vector2f& v )
 	{
 		const auto n = Normalise( v );

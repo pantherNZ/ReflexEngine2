@@ -18,11 +18,12 @@
 
 namespace Reflex::Core
 {
-	World::World( Context context, sf::FloatRect worldBounds )
+	World::World( const Context& context, const sf::FloatRect& worldBounds, const sf::Vector2f& gravity )
 		: m_context( context )
 		, m_worldView( context.window.getDefaultView() )
 		, m_worldBounds( worldBounds )
 		, m_tileMap( 200, 20 )
+		, m_box2DWorld( b2Vec2( gravity.x, gravity.y ) )
 	{
 		Setup();
 	}
@@ -36,7 +37,11 @@ namespace Reflex::Core
 	{
 		RegisterComponent< Reflex::Components::Transform >();
 		RegisterComponent< Reflex::Components::Interactable >();
-		RegisterComponent< Reflex::Components::SFMLObject >();
+		RegisterComponent< Reflex::Components::CircleShape >();
+		RegisterComponent< Reflex::Components::RectangleShape >();
+		RegisterComponent< Reflex::Components::ConvexShape >();
+		RegisterComponent< Reflex::Components::Sprite >();
+		RegisterComponent< Reflex::Components::Text >();
 		RegisterComponent< Reflex::Components::Grid >();
 		RegisterComponent< Reflex::Components::Camera >();
 		RegisterComponent< Reflex::Components::Steering >();

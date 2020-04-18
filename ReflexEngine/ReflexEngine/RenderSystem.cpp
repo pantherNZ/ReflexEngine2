@@ -4,16 +4,8 @@
 #include "SFMLObjectComponent.h"
 #include "TransformComponent.h"
 
-#include <algorithm>
-
 namespace Reflex::Systems
 {
-	void RenderSystem::RegisterComponents()
-	{
-		RequiresComponent( Reflex::Components::SFMLObject );
-		RequiresComponent( Reflex::Components::Transform );
-	}
-
 	bool RenderSystem::ShouldAddObject( const Object& object ) const
 	{
 		for( unsigned i = 0; i < Reflex::MaxComponents; ++i )

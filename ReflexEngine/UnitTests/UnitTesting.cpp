@@ -138,10 +138,10 @@ protected:
 	bool TestEventsRenderSystem()
 	{
 		auto object = GetWorld().CreateObject();
-		object.AddComponent< Reflex::Components::SFMLObject >( sf::CircleShape( 5.0f ) );
+		object.AddComponent< Reflex::Components::CircleShape >( 5.0f );
 
 		auto object2 = GetWorld().CreateObject();
-		object2.AddComponent< Reflex::Components::SFMLObject >( sf::CircleShape( 5.0f ) );
+		object2.AddComponent< Reflex::Components::CircleShape >( 5.0f );
 
 		const auto* render = GetWorld().GetSystem< Reflex::Systems::RenderSystem >();
 

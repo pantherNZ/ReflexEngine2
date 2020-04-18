@@ -28,7 +28,7 @@ namespace Reflex::Core
 	class World : private sf::NonCopyable
 	{
 	public:
-		explicit World( Context context, sf::FloatRect worldBounds );
+		explicit World( const Context& context, const sf::FloatRect& worldBounds, const sf::Vector2f& gravity = sf::Vector2f( 0.0f, -9.8f ) );
 		~World();
 
 		void Update( const float deltaTime );
@@ -91,9 +91,6 @@ namespace Reflex::Core
 		/*---------------*/
 
 		// Utility and helper functions
-		//template< typename Func >
-		//void ForEachObject( Func function );
-
 		sf::RenderWindow& GetWindow() { return m_context.window; }
 		const sf::RenderWindow& GetWindow() const { return m_context.window; }
 		TextureManager& GetTextureManager() { return m_context.textureManager; }
@@ -101,6 +98,8 @@ namespace Reflex::Core
 		EventManager& GetEventManager() { return eventManager; }
 		TileMap& GetTileMap() { return m_tileMap; }
 		const TileMap& GetTileMap() const { return m_tileMap; }
+		b2World& GetBox2DWorld() { return m_box2DWorld; }
+		const b2World& GetBox2DWorld() const { return m_box2DWorld; }
 
 		sf::FloatRect GetBounds() const;
 		Reflex::Handle< Reflex::Components::Transform > GetSceneRoot() const;
@@ -132,6 +131,9 @@ namespace Reflex::Core
 		Context m_context;
 		sf::View m_worldView;
 		sf::FloatRect m_worldBounds;
+
+		// Box2d world
+		b2World m_box2DWorld;
 
 		// Handler for event system
 		EventManager eventManager;
@@ -236,8 +238,6 @@ namespace Reflex::Core
 		}
 
 		auto system = std::make_unique< T >( *this, std::forward< Args >( args )... );
-
-		std::vector< Type > requiredComponentTypes;
 
 		// Register components
 		system->RegisterComponents();

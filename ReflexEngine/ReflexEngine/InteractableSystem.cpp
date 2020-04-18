@@ -12,7 +12,6 @@ namespace Reflex::Systems
 	{
 		RequiresComponent( Transform );
 		RequiresComponent( Interactable );
-		RequiresComponent( SFMLObject );
 	}
 
 	bool InteractableSystem::CheckCollision( const Reflex::Components::Transform::Handle& transform, const sf::FloatRect& localBounds, const sf::Vector2f& mousePosition ) const
@@ -31,36 +30,36 @@ namespace Reflex::Systems
 		const auto& window = GetWorld().GetWindow();
 		const auto mousePosition = window.mapPixelToCoords( sf::Mouse::getPosition( window ) );
 
-		ForEachObject< Transform, Interactable, SFMLObject >(
-			[&]( const Transform::Handle& transform, const Interactable::Handle& interactable, const SFMLObject::Handle& sfmlObj )
+		ForEachObject< Transform, Interactable >(
+			[&]( const Transform::Handle& transform, const Interactable::Handle& interactable)
 			{
-				auto* ptr = interactable.Get();
-				auto collisionObj = sfmlObj;
-
-				if( interactable->m_replaceCollisionObject )
-					collisionObj = interactable->m_replaceCollisionObject.GetComponent< SFMLObject >();
-
-				bool collision = false;
-
-				// Collision with bounds
-				switch( collisionObj->GetType() )
-				{
-				case SFMLObjectType::Circle:
-					collision = Reflex::Circle( transform->GetWorldPosition(), collisionObj->GetCircleShape().getRadius() ).Contains( mousePosition );
-					break;
-				case SFMLObjectType::Rectangle:
-					collision = CheckCollision( transform, collisionObj->GetRectangleShape().getLocalBounds(), mousePosition );
-					break;
-				case SFMLObjectType::Convex:
-					collision = CheckCollision( transform, collisionObj->GetConvexShape().getLocalBounds(), mousePosition );
-					break;
-				case SFMLObjectType::Sprite:
-					collision = CheckCollision( transform, collisionObj->GetSprite().getLocalBounds(), mousePosition );
-					break;
-				case SFMLObjectType::Text:
-					collision = CheckCollision( transform, collisionObj->GetText().getLocalBounds(), mousePosition );
-					break;
-				}
+			auto* ptr = interactable.Get();
+			//auto collisionObj = sfmlObj;
+			//
+			//if( interactable->m_replaceCollisionObject )
+			//	collisionObj = interactable->m_replaceCollisionObject.GetComponent< SFMLObject >();
+			//
+			bool collision = false;
+			//
+			//// Collision with bounds
+			//switch( collisionObj->GetType() )
+			//{
+			//case SFMLObjectType::Circle:
+			//	collision = Reflex::Circle( transform->GetWorldPosition(), collisionObj->GetCircleShape().getRadius() ).Contains( mousePosition );
+			//	break;
+			//case SFMLObjectType::Rectangle:
+			//	collision = CheckCollision( transform, collisionObj->GetRectangleShape().getLocalBounds(), mousePosition );
+			//	break;
+			//case SFMLObjectType::Convex:
+			//	collision = CheckCollision( transform, collisionObj->GetConvexShape().getLocalBounds(), mousePosition );
+			//	break;
+			//case SFMLObjectType::Sprite:
+			//	collision = CheckCollision( transform, collisionObj->GetSprite().getLocalBounds(), mousePosition );
+			//	break;
+			//case SFMLObjectType::Text:
+			//	collision = CheckCollision( transform, collisionObj->GetText().getLocalBounds(), mousePosition );
+			//	break;
+			//}
 
 				// Focus / highlighting
 				if( ptr->isFocussed != collision )

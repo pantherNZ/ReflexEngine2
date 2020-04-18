@@ -43,7 +43,9 @@ namespace Reflex::Core
 	void TileMap::Repopulate( World& world )
 	{
 		Reset();
-		TODO( "Repopulate" );
+		
+		for( const auto object : world.GetObjects() )
+			Insert( object );
 	}
 
 	void TileMap::Insert( const Object& object )
@@ -72,9 +74,9 @@ namespace Reflex::Core
 			chunk.chunk = chunkIdx;
 
 #ifdef TileMapLogging
-			LOG_INFO( "Insert Position: " << position << ", Chunk: " << chunkIdx << ", cell: " << cellId );
-			if( auto sfmlObj = object.GetComponent< Reflex::Components::SFMLObject >() )
-				sfmlObj->GetCircleShape().setFillColor( Reflex::ColourFromScalar( ( std::hash< unsigned >()( cellId * 23234 ^ 345 ) % 1000 ) / 1000.0f ) );
+			//LOG_INFO( "Insert Position: " << position << ", Chunk: " << chunkIdx << ", cell: " << cellId );
+			//if( auto sfmlObj = object.GetComponent< Reflex::Components::SFMLObject >() )
+			//	sfmlObj->GetCircleShape().setFillColor( Reflex::ColourFromScalar( ( std::hash< unsigned >()( cellId * 23234 ^ 345 ) % 1000 ) / 1000.0f ) );
 #endif
 		}
 	}
@@ -112,8 +114,8 @@ namespace Reflex::Core
 					chunk.chunk = chunkIdx;
 #ifdef TileMapLogging
 					//LOG_INFO( "Insert Boundary: Chunk: " << chunkIdx << ", cell: " << cellId );
-					if( auto sfmlObj = object.GetComponent< Reflex::Components::SFMLObject >() )
-						sfmlObj->GetCircleShape().setFillColor( Reflex::ColourFromScalar( ( std::hash< unsigned >()( cellId * 23234 ^ 345 ) % 1000 ) / 1000.0f ) );
+					//if( auto sfmlObj = object.GetComponent< Reflex::Components::SFMLObject >() )
+					//	sfmlObj->GetCircleShape().setFillColor( Reflex::ColourFromScalar( ( std::hash< unsigned >()( cellId * 23234 ^ 345 ) % 1000 ) / 1000.0f ) );
 #endif
 				}
 			}

@@ -63,11 +63,15 @@ namespace Reflex::Components
 		Reflex::BoundingBox GetGlobalBounds() const;
 		void SetLocalBounds( const Reflex::BoundingBox& bounds );
 
+		bool FacesMovementDirection() const { return m_faceMovementDirection; }
+		void SetFaceMovementDirection( const bool faceMovement ) { m_faceMovementDirection = faceMovement; }
+
 	protected:
 		unsigned m_renderIndex = 0U;
 		static unsigned s_nextRenderIndex;
 
 		bool m_useTileMap = true;
+		bool m_faceMovementDirection = true;
 		float m_rotateDegreesPerSec = 0.0f;
 		float m_rotateDurationSec = 0.0f;
 		std::function< void( const Transform::Handle& ) > m_finishedRotationCallback;
