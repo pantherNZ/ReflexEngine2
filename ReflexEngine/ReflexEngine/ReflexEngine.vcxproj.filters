@@ -150,11 +150,14 @@
     <ClInclude Include="BaseSystem.h">
       <Filter>Systems</Filter>
     </ClInclude>
-    <ClInclude Include="ColliderComponent.h">
-      <Filter>Components</Filter>
-    </ClInclude>
     <ClInclude Include="PhysicsSystem.h">
       <Filter>Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="Box2DDebugDraw.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Box2DShapeComponent.h">
+      <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -242,11 +245,11 @@
     <ClCompile Include="TileMap.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="ColliderComponent.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="PhysicsSystem.cpp">
       <Filter>Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="Box2DDebugDraw.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

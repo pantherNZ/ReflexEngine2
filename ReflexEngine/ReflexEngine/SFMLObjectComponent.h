@@ -16,6 +16,8 @@ namespace Reflex::Components
 		void GetValues( std::vector< std::pair< std::string, std::string > >& values ) const override;
 		bool IsRenderComponent() const final { return true; }
 		void Render( sf::RenderTarget& target, sf::RenderStates states ) const final { target.draw( *this, states ); }
+
+		void CreateRigidBody();
 	};
 
 	class RectangleShape : public Component< RectangleShape >, public sf::RectangleShape

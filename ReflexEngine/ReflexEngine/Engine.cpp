@@ -5,8 +5,8 @@
 // Implementation
 namespace Reflex::Core
 {
-	Engine::Engine( const std::string& windowName, const bool fullscreen, const sf::Time& timeStep, const bool enableProfiling )
-		: m_updateInterval( timeStep )
+	Engine::Engine( const std::string& windowName, const bool fullscreen, const int fixedUpdatesPerSecond, const bool enableProfiling )
+		: m_fixedUpdatesPerSecond( fixedUpdatesPerSecond )
 		, m_window()
 		, m_textureManager()
 		, m_fontManager()
@@ -19,8 +19,8 @@ namespace Reflex::Core
 		Setup();
 	}
 
-	Engine::Engine( const int screenWidth, const int screenHeight, const std::string& windowName, const sf::Time& timeStep, const bool enableProfiling )
-		: m_updateInterval( timeStep )
+	Engine::Engine( const int screenWidth, const int screenHeight, const std::string& windowName, const int fixedUpdatesPerSecond, const bool enableProfiling )
+		: m_fixedUpdatesPerSecond( fixedUpdatesPerSecond )
 		, m_window()
 		, m_textureManager()
 		, m_fontManager()
@@ -35,8 +35,8 @@ namespace Reflex::Core
 		Setup();
 	}
 
-	Engine::Engine( const bool createWindow, const sf::Time& timeStep, const bool enableProfiling )
-		: m_updateInterval( timeStep )
+	Engine::Engine( const bool createWindow, const int fixedUpdatesPerSecond, const bool enableProfiling )
+		: m_fixedUpdatesPerSecond( fixedUpdatesPerSecond )
 		, m_window()
 		, m_textureManager()
 		, m_fontManager()
@@ -89,12 +89,13 @@ namespace Reflex::Core
 
 				accumlatedTime += deltaTime;
 				unsigned counter = 0;
+				const auto interval = sf::seconds( 1.0f / m_fixedUpdatesPerSecond );
 
-				while( accumlatedTime > m_updateInterval && ++counter < 10 )
+				while( accumlatedTime > interval && ++counter < 10 )
 				{
-					accumlatedTime -= m_updateInterval;
+					accumlatedTime -= interval;
 					ProcessEvents();
-					Update( m_updateInterval.asSeconds() );
+					Update( interval.asSeconds() );
 				}
 
 				if( !m_cmdMode )
@@ -175,7 +176,9 @@ namespace Reflex::Core
 		ImGui::Begin( "Engine Info" );
 		ImGui::Text( m_statisticsText.toAnsiString().c_str() );
 		ImGui::InputInt( "FPS Limit", &m_fpsLimit, 1, 10 );
-		m_fpsLimit = std::max( 0, m_fpsLimit );
+		m_fpsLimit = std::max( m_fpsLimit, 0 );
+		ImGui::InputInt( "Fixed Updates Per Second", &m_fixedUpdatesPerSecond, 1, 10 );
+		m_fixedUpdatesPerSecond = Reflex::Clamp( m_fixedUpdatesPerSecond, 0, 240 );
 
 		ImGui::Text( Stream( "Mouse Pos: " << ImGui::GetMousePos().x << ", " << ImGui::GetMousePos().y ).c_str() );
 

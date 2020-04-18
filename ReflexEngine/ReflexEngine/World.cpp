@@ -15,6 +15,7 @@
 #include "MovementSystem.h"
 #include "CameraSystem.h"
 #include "SteeringSystem.h"
+#include "PhysicsSystem.h"
 
 namespace Reflex::Core
 {
@@ -24,6 +25,7 @@ namespace Reflex::Core
 		, m_worldBounds( worldBounds )
 		, m_tileMap( 200, 20 )
 		, m_box2DWorld( b2Vec2( gravity.x, gravity.y ) )
+		, m_box2DDebugDraw( context.window, m_box2DUnitToPixelScale )
 	{
 		Setup();
 	}
@@ -51,13 +53,32 @@ namespace Reflex::Core
 		AddSystem< Reflex::Systems::MovementSystem >();
 		AddSystem< Reflex::Systems::CameraSystem >();
 		AddSystem< Reflex::Systems::SteeringSystem >();
+		AddSystem< Reflex::Systems::PhysicsSystem >();
 
 		m_sceneGraphRoot = CreateObject( sf::Vector2f( 0.0f, 0.0f ), 0.0f, sf::Vector2f( 1.0f, 1.0f ), false, false );
+
+		m_box2DDebugDraw.SetFlags( -1 );
+		m_box2DWorld.SetDebugDraw( &m_box2DDebugDraw );
+		//m_box2DWorld.SetDestructionListener( &m_destructionListener );
+		//m_box2DWorld.SetContactListener( this );
+
+		b2BodyDef groundBodyDef;
+		groundBodyDef.position.Set( 0.0f, 50.0f );
+
+		b2Body* groundBody = m_box2DWorld.CreateBody( &groundBodyDef );
+
+		b2PolygonShape groundBox;
+		groundBox.SetAsBox( 50.0f, 10.0f );
+
+		groundBody->CreateFixture( &groundBox, 0.0f );
 	}
 
 	void World::Update( const float deltaTime )
 	{
 		PROFILE;
+
+		m_box2DWorld.Step( deltaTime, m_box2DVelocityIterations, m_box2DPositionIterations );
+
 		// Update systems
 		for( auto& system : m_systems )
 			system.second->Update( deltaTime );
@@ -81,6 +102,17 @@ namespace Reflex::Core
 			system.second->RenderUI();
 			GetWindow().draw( *system.second );
 		}
+
+		m_box2DWorld.DebugDraw();
+
+		ImGui::Begin( "World Info" );
+		
+		if( ImGui::Checkbox( "Box2D Debug Draw", &m_box2DUseDebugDraw ) )
+			m_box2DWorld.SetDebugDraw( m_box2DUseDebugDraw ? &m_box2DDebugDraw : nullptr );
+		ImGui::InputInt( "Box2D Position Iterations", &m_box2DPositionIterations );
+		ImGui::InputInt( "Box2D Velocity Iterations", &m_box2DVelocityIterations );
+
+		ImGui::End();
 	}
 
 	Object World::CreateObject( const sf::Vector2f& position, const float rotation, const sf::Vector2f& scale, const bool attachToRoot /*= true*/, const bool useTileMap /*= true*/ )

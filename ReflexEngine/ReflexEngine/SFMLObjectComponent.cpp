@@ -1,6 +1,7 @@
 #include "Precompiled.h"
 #include "SFMLObjectComponent.h"
 #include "Object.h"
+#include "Box2DShapeComponent.h"
 
 namespace Reflex::Components
 {
@@ -8,6 +9,7 @@ namespace Reflex::Components
 		: Component< CircleShape >( owner )
 		, sf::CircleShape( radius, pointCount )
 	{
+		Reflex::CenterOrigin( *this );
 		if( colour )
 			setFillColor( *colour );
 	}
@@ -15,6 +17,7 @@ namespace Reflex::Components
 	CircleShape::CircleShape( const Reflex::Object& owner, const std::optional< sf::Color > colour )
 		: Component< CircleShape >( owner )
 	{
+		Reflex::CenterOrigin( *this );
 		if( colour )
 			setFillColor( *colour );
 	}
@@ -23,6 +26,7 @@ namespace Reflex::Components
 		: Component< RectangleShape >( owner )
 		, sf::RectangleShape( size )
 	{
+		Reflex::CenterOrigin( *this );
 		if( colour )
 			setFillColor( *colour );
 	}
@@ -30,6 +34,7 @@ namespace Reflex::Components
 	RectangleShape::RectangleShape( const Reflex::Object& owner, const std::optional< sf::Color > colour )
 		: Component< RectangleShape >( owner )
 	{
+		Reflex::CenterOrigin( *this );
 		if( colour )
 			setFillColor( *colour );
 	}
@@ -38,6 +43,7 @@ namespace Reflex::Components
 		: Component< ConvexShape >( owner )
 		, sf::ConvexShape( pointCount )
 	{
+		Reflex::CenterOrigin( *this );
 		if( colour )
 			setFillColor( *colour );
 	}
@@ -46,6 +52,7 @@ namespace Reflex::Components
 		: Component< ConvexShape >( owner )
 		, sf::ConvexShape( points.size() )
 	{
+		Reflex::CenterOrigin( *this );
 		for( size_t i = 0; i < points.size(); ++i )
 			setPoint( i, points[i] );
 
@@ -56,6 +63,7 @@ namespace Reflex::Components
 	ConvexShape::ConvexShape( const Reflex::Object& owner, const std::optional< sf::Color > colour )
 		: Component< ConvexShape >( owner )
 	{
+		Reflex::CenterOrigin( *this );
 		if( colour )
 			setFillColor( *colour );
 	}
@@ -64,6 +72,7 @@ namespace Reflex::Components
 		: Component< Sprite >( owner )
 		, sf::Sprite( texture )
 	{
+		Reflex::CenterOrigin( *this );
 		if( colour )
 			setColor( *colour );
 	}
@@ -72,6 +81,7 @@ namespace Reflex::Components
 		: Component< Sprite >( owner )
 		, sf::Sprite( texture, rectangle )
 	{
+		Reflex::CenterOrigin( *this );
 		if( colour )
 			setColor( *colour );
 	}
@@ -79,6 +89,7 @@ namespace Reflex::Components
 	Sprite::Sprite( const Reflex::Object& owner, const std::optional< sf::Color > colour )
 		: Component< Sprite >( owner )
 	{
+		Reflex::CenterOrigin( *this );
 		if( colour )
 			setColor( *colour );
 	}
@@ -87,6 +98,7 @@ namespace Reflex::Components
 		: Component< Text >( owner )
 		, sf::Text( string, font, characterSize )
 	{
+		Reflex::CenterOrigin( *this );
 		if( colour )
 			setFillColor( *colour );
 	}
@@ -94,6 +106,7 @@ namespace Reflex::Components
 	Text::Text( const Reflex::Object& owner, const std::optional< sf::Color > colour )
 		: Component< Text >( owner )
 	{
+		Reflex::CenterOrigin( *this );
 		if( colour )
 			setFillColor( *colour );
 	}
@@ -155,5 +168,10 @@ namespace Reflex::Components
 		GetColourValues( values, *this );
 		values.emplace_back( "String", getString() );
 		values.emplace_back( "Style", Reflex::ToString( getStyle() ) );
+	}
+
+	void CircleShape::CreateRigidBody()
+	{
+		GetObject().AddComponent< Reflex::Components::Box2DShapeComponent >( getRadius() );
 	}
 }

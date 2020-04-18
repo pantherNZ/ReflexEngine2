@@ -15,11 +15,11 @@ namespace Reflex::Core
 	{
 	public:
 		// Construct an engine instance
-		explicit Engine( const std::string& windowName = "Reflex Engine", const bool fullscreen = false, const sf::Time& timeStep = sf::seconds( 1.0f / 30.0f ), const bool enableProfiling = false );
-		explicit Engine( const int screenWidth, const int screenHeight, const std::string& windowName = "Reflex Engine", const sf::Time& timeStep = sf::seconds( 1.0f / 30.0f ), const bool enableProfiling = false );
+		explicit Engine( const std::string& windowName = "Reflex Engine", const bool fullscreen = false, const int fixedUpdatesPerSecond = 30, const bool enableProfiling = false );
+		explicit Engine( const int screenWidth, const int screenHeight, const std::string& windowName = "Reflex Engine", const int fixedUpdatesPerSecond = 30, const bool enableProfiling = false );
 
 		// This constructor is intended for creating an engine without a window / UI (by passing false)
-		explicit Engine( const bool createWindow, const sf::Time& timeStep = sf::seconds( 1.0f / 30.0f ), const bool enableProfiling = false );
+		explicit Engine( const bool createWindow, const int fixedUpdatesPerSecond = 30, const bool enableProfiling = false );
 
 		~Engine();
 
@@ -52,7 +52,8 @@ namespace Reflex::Core
 		StateManager m_stateManager;
 
 		// Stats
-		const sf::Time m_updateInterval;
+		int m_fpsLimit = 60;
+		int m_fixedUpdatesPerSecond;
 		sf::String m_statisticsText;
 		sf::Time m_statisticsUpdateTime;
 		sf::Clock m_totalTime;
@@ -74,7 +75,6 @@ namespace Reflex::Core
 		bool m_cmdMode = false;
 		bool m_showMetrics = false;
 		bool m_showStyleEditor = false;
-		int m_fpsLimit = 60;
 	};
 
 	template< typename T >

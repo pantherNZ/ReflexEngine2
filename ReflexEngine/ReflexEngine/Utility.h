@@ -3,6 +3,7 @@
 #include <typeindex>
 #include <array>
 #include <vector>
+#include <b2_draw.h>
 
 // Common Utility
 namespace Reflex
@@ -333,6 +334,16 @@ namespace Reflex
 		return sf::Vector2i( ( int )convert.x, ( int )convert.y );
 	}
 
+	inline sf::Vector2f B2VecToVector2f( const b2Vec2& vector, const float scaleValue = 1.0f )
+	{
+		return sf::Vector2f( vector.x, vector.y ) * scaleValue;
+	}
+
+	inline b2Vec2 Vector2fToB2Vec( const sf::Vector2f& vector, const float scaleValue = 1.0f )
+	{
+		return b2Vec2( vector.x / scaleValue, vector.y / scaleValue );
+	}
+
 	inline sf::Color ToColour( const std::array< float, 3 >& colour )
 	{
 		return sf::Color( 
@@ -348,6 +359,16 @@ namespace Reflex
 			sf::Uint8( colour[1] * 255 ), 
 			sf::Uint8( colour[2] * 255 ), 
 			sf::Uint8( colour[3] * 255 ) );
+	}
+
+	inline sf::Color ToColour( const b2Color& colour, sf::Uint8 alpha = 255 )
+	{
+		return sf::Color( static_cast< sf::Uint8 >( colour.r * 255 ), static_cast< sf::Uint8 >( colour.g * 255 ), static_cast< sf::Uint8 >( colour.b * 255 ), alpha );
+	}
+
+	inline b2Color ToB2Colour( const sf::Color& colour, const float alpha = 1.0f )
+	{
+		return b2Color( colour.r / 255.0f, colour.g / 255.0f, colour.b / 255.0f, alpha );
 	}
 
 	inline std::array< float, 3 > ToImGuiColour3( const sf::Color& colour )

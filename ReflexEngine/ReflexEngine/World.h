@@ -9,6 +9,7 @@
 #include "TileMap.h"
 #include "BaseObject.h"
 #include "Component.h"
+#include "Box2DDebugDraw.h"
 
 // Engine class
 namespace Reflex 
@@ -28,7 +29,7 @@ namespace Reflex::Core
 	class World : private sf::NonCopyable
 	{
 	public:
-		explicit World( const Context& context, const sf::FloatRect& worldBounds, const sf::Vector2f& gravity = sf::Vector2f( 0.0f, -9.8f ) );
+		explicit World( const Context& context, const sf::FloatRect& worldBounds, const sf::Vector2f& gravity = sf::Vector2f( 0.0f, 9.8f ) );
 		~World();
 
 		void Update( const float deltaTime );
@@ -117,6 +118,10 @@ namespace Reflex::Core
 
 		std::vector< Object > GetObjects();
 
+		float GetBox2DUnitToPixelScale() const { return m_box2DUnitToPixelScale; }
+		float ToBox2DUnits( const float worldUnits ) const { return worldUnits / m_box2DUnitToPixelScale; }
+		float ToWorldUnits( const float b2Units ) const { return b2Units * m_box2DUnitToPixelScale; }
+
 	protected:
 		void Setup();
 		Object ObjectFromIndex( const unsigned index );
@@ -134,6 +139,11 @@ namespace Reflex::Core
 
 		// Box2d world
 		b2World m_box2DWorld;
+		float m_box2DUnitToPixelScale = 32;
+		Box2DDebugDraw m_box2DDebugDraw;
+		bool m_box2DUseDebugDraw = true;
+		int m_box2DVelocityIterations = 8;
+		int m_box2DPositionIterations = 3;
 
 		// Handler for event system
 		EventManager eventManager;

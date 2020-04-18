@@ -1,14 +1,13 @@
 #include "Precompiled.h"
 #include "PhysicsSystem.h"
 #include "TransformComponent.h"
-#include "ColliderComponent.h"
+#include "Box2DShapeComponent.h"
 
 namespace Reflex::Systems
 {
 	void PhysicsSystem::RegisterComponents()
 	{
-		RequiresComponent( Reflex::Components::CircleCollider );
-		RequiresComponent( Reflex::Components::RectangleCollider );
+		RequiresComponent( Reflex::Components::Box2DShapeComponent );
 	}
 
 	bool PhysicsSystem::ShouldAddObject( const Object& object ) const
@@ -20,9 +19,10 @@ namespace Reflex::Systems
 	{
 		for( const auto& object : m_releventObjects )
 		{
-			if( const auto circle = object.GetComponent< Reflex::Components::CircleCollider >() )
+			if( const auto shape = object.GetComponent< Reflex::Components::Box2DShapeComponent >() )
 			{
-
+				object.GetTransform()->setPosition( shape->GetPosition() );
+				object.GetTransform()->setRotation( shape->GetRotation() );
 			}
 		}
 	}
