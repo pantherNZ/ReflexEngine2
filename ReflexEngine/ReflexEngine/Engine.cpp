@@ -5,52 +5,37 @@
 // Implementation
 namespace Reflex::Core
 {
-	Engine::Engine( const std::string& windowName, const bool fullscreen, const int fixedUpdatesPerSecond, const bool enableProfiling )
-		: m_fixedUpdatesPerSecond( fixedUpdatesPerSecond )
-		, m_window()
-		, m_textureManager()
-		, m_fontManager()
-		, m_stateManager( Context( m_window, m_textureManager, m_fontManager ) )
-		, m_profilingEnabled( enableProfiling )
+	Engine::Engine( const std::string& windowName, const bool fullscreen )
+		: m_world( Context( m_window, m_textureManager, m_fontManager ), m_params.worldBounds, m_params.gravity )
+		, m_stateManager( m_world )
 	{
-		const auto modes = sf::VideoMode::getFullscreenModes();
-		m_window.create( modes[0], windowName, fullscreen ? sf::Style::Fullscreen : sf::Style::Default );
-
 		Setup();
 	}
 
-	Engine::Engine( const int screenWidth, const int screenHeight, const std::string& windowName, const int fixedUpdatesPerSecond, const bool enableProfiling )
-		: m_fixedUpdatesPerSecond( fixedUpdatesPerSecond )
-		, m_window()
-		, m_textureManager()
-		, m_fontManager()
-		, m_stateManager( Context( m_window, m_textureManager, m_fontManager ) )
-		, m_profilingEnabled( enableProfiling )
+	Engine::Engine( const std::string& windowName, const int screenWidth, const int screenHeight )
+		: m_world( Context( m_window, m_textureManager, m_fontManager ), m_params.worldBounds, m_params.gravity )
+		, m_stateManager( m_world )
 	{
-		sf::VideoMode mode;
-		mode.width = screenWidth;
-		mode.height = screenHeight;
-		m_window.create( mode, windowName, sf::Style::Default );
+		m_params.videoMode.width = screenWidth;
+		m_params.videoMode.height = screenHeight;
+		Setup();
+	}
 
+	Engine::Engine( const Engine::EngineParams& params )
+		: m_params( params )
+		, m_world( Context( m_window, m_textureManager, m_fontManager ), m_params.worldBounds, m_params.gravity )
+		, m_stateManager( m_world )
+	{
 		Setup();
 	}
 
 	Engine::Engine( const bool createWindow, const int fixedUpdatesPerSecond, const bool enableProfiling )
-		: m_fixedUpdatesPerSecond( fixedUpdatesPerSecond )
-		, m_window()
-		, m_textureManager()
-		, m_fontManager()
-		, m_stateManager( Context( m_window, m_textureManager, m_fontManager ) )
-		, m_profilingEnabled( enableProfiling )
+		: m_world( Context( m_window, m_textureManager, m_fontManager ), m_params.worldBounds, m_params.gravity )
+		, m_stateManager( m_world )
 	{
-		m_cmdMode = !createWindow;
-
-		if( createWindow )
-		{
-			const auto modes = sf::VideoMode::getFullscreenModes();
-			m_window.create( modes[0], "Reflex Engine", sf::Style::Default );
-		}
-
+		m_params.cmdMode = !createWindow;
+		m_params.fixedUpdatesPerSecond = fixedUpdatesPerSecond;
+		m_params.enableProfiling = enableProfiling;
 		Setup();
 	}
 
@@ -58,11 +43,17 @@ namespace Reflex::Core
 	void Engine::Setup()
 	{
 		srand( (unsigned )time( 0 ) );
-		m_window.setPosition( sf::Vector2i( -6, 0 ) );
-		m_window.setVerticalSyncEnabled( false );
-		ImGui::SFML::Init( m_window );
 
-		if( m_profilingEnabled )
+		if( !m_params.cmdMode )
+		{
+			m_window.create( m_params.videoMode, m_params.windowName, m_params.windowStyle );
+			m_window.setPosition( sf::Vector2i( -6, 0 ) );
+			m_window.setVerticalSyncEnabled( false );
+
+			ImGui::SFML::Init( m_window );
+		}
+
+		if( m_params.enableProfiling )
 			Profiler::GetProfiler();
 	}
 
@@ -80,16 +71,18 @@ namespace Reflex::Core
 			sf::Clock clock;
 			sf::Time accumlatedTime = sf::Time::Zero;
 
-			while( m_cmdMode || m_window.isOpen() )
+			while( m_params.cmdMode || m_window.isOpen() )
 			{
 				sf::Time deltaTime = std::min( clock.restart(), sf::seconds( 1.0f / 30.f ) );
 
-				if( m_profilingEnabled )
+#ifdef PROFILING
+				if( m_params.enableProfiling )
 					Profiler::GetProfiler().FrameTick( deltaTime.asMicroseconds() );
+#endif
 
 				accumlatedTime += deltaTime;
 				unsigned counter = 0;
-				const auto interval = sf::seconds( 1.0f / m_fixedUpdatesPerSecond );
+				const auto interval = sf::seconds( 1.0f / m_params.fixedUpdatesPerSecond );
 
 				while( accumlatedTime > interval && ++counter < 10 )
 				{
@@ -98,20 +91,22 @@ namespace Reflex::Core
 					Update( interval.asSeconds() );
 				}
 
-				if( !m_cmdMode )
+				if( !m_params.cmdMode )
 				{
 					ImGui::SFML::Update( m_window, deltaTime );
 					Render();
 					UpdateStatistics( ( int )deltaTime.asMicroseconds(), ( int )clock.getElapsedTime().asMicroseconds() );
 				}
 
-				const auto targetFPS = sf::seconds( 1.0f / m_fpsLimit );
-				if( m_fpsLimit > 0 && clock.getElapsedTime() < targetFPS )
+				const auto targetFPS = sf::seconds( 1.0f / m_params.fpsLimit );
+				if( m_params.fpsLimit > 0 && clock.getElapsedTime() < targetFPS )
 					sf::sleep( targetFPS - clock.getElapsedTime() );
 			}
 
-			if( m_profilingEnabled )
+#ifdef PROFILING
+			if( m_params.enableProfiling )
 				Profiler::GetProfiler().OutputResults( "Performance_Results.txt" );
+#endif
 		}
 		catch( std::exception& e )
 		{
@@ -122,7 +117,7 @@ namespace Reflex::Core
 
 	void Engine::Exit()
 	{
-		m_cmdMode = false;
+		m_params.cmdMode = false;
 
 		if( m_window.isOpen() )
 			m_window.close();
@@ -175,10 +170,10 @@ namespace Reflex::Core
 		ImGui::SetNextWindowSize( sf::Vector2( 200.0f, 200.0f ), ImGuiCond_::ImGuiCond_Once );
 		ImGui::Begin( "Engine Info" );
 		ImGui::Text( m_statisticsText.toAnsiString().c_str() );
-		ImGui::InputInt( "FPS Limit", &m_fpsLimit, 1, 10 );
-		m_fpsLimit = std::max( m_fpsLimit, 0 );
-		ImGui::InputInt( "Fixed Updates Per Second", &m_fixedUpdatesPerSecond, 1, 10 );
-		m_fixedUpdatesPerSecond = Reflex::Clamp( m_fixedUpdatesPerSecond, 0, 240 );
+		ImGui::InputInt( "FPS Limit", &m_params.fpsLimit, 1, 10 );
+		m_params.fpsLimit = std::max( m_params.fpsLimit, 0 );
+		ImGui::InputInt( "Fixed Updates Per Second", &m_params.fixedUpdatesPerSecond, 1, 10 );
+		m_params.fixedUpdatesPerSecond = Reflex::Clamp( m_params.fixedUpdatesPerSecond, 0, 240 );
 
 		ImGui::Text( Stream( "Mouse Pos: " << ImGui::GetMousePos().x << ", " << ImGui::GetMousePos().y ).c_str() );
 

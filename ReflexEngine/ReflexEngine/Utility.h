@@ -20,8 +20,6 @@ namespace Reflex
 	#define PIDIV2				1.570796327f
 	#define PIDIV4				0.785398163f
 	#define SQRT2				1.41421356237f
-	#define TORADIANS( deg )	( deg ) * PI / 180.0f
-	#define TODEGREES( rad )	( rad ) / PI * 180.0f
 
 	// String common
 	#define STRINGIFY( x ) #x
@@ -63,6 +61,18 @@ namespace Reflex
 	constexpr inline int Mod( int a, int b )
 	{
 		return ( ( a %= b ) < 0 ) ? a + b : a;
+	}
+
+	template< typename T >
+	T ToRadians( T deg )
+	{
+		return T( deg * PI / T( 180.0 ) );
+	}
+
+	template< typename T >
+	T ToDegrees( T rad )
+	{
+		return T( rad / PI * T( 180.0 ) );
 	}
 
 	inline float Modf( float a, float b )
@@ -528,7 +538,7 @@ namespace Reflex
 
 	inline sf::Vector2f RotateAroundPoint( const sf::Vector2f& position, const sf::Vector2f& rotateAround, const float angleDegrees )
 	{
-		const auto angleRadians = TORADIANS( angleDegrees );
+		const auto angleRadians = Reflex::ToRadians( angleDegrees );
 		const float sinR = sin( angleRadians );
 		const float cosR = cos( angleRadians );
 		const float diffX = position.x - rotateAround.x;

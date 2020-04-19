@@ -31,6 +31,8 @@ namespace Reflex::Components
 		void GetValues( std::vector< std::pair< std::string, std::string > >& values ) const override;
 		bool IsRenderComponent() const final { return true; }
 		void Render( sf::RenderTarget& target, sf::RenderStates states ) const final { target.draw( *this, states ); }
+
+		void CreateRigidBody( const b2BodyType type = b2BodyType::b2_staticBody );
 	};
 
 	class ConvexShape : public Component< ConvexShape >, public sf::ConvexShape
@@ -45,6 +47,8 @@ namespace Reflex::Components
 		void GetValues( std::vector< std::pair< std::string, std::string > >& values ) const override;
 		bool IsRenderComponent() const final { return true; }
 		void Render( sf::RenderTarget& target, sf::RenderStates states ) const final { target.draw( *this, states ); }
+
+		void CreateRigidBody( const b2BodyType type = b2BodyType::b2_staticBody );
 	};
 
 	class Sprite : public Component< Sprite >, public sf::Sprite

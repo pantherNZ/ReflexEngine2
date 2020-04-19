@@ -38,8 +38,8 @@ namespace Reflex::Core
 
 		/* Object functions*/
 		void CreateROFile( const std::string& name, const Object& object );
-		Object CreateObject( const sf::Vector2f& position = sf::Vector2f(), const float rotation = 0.0f, const sf::Vector2f & scale = sf::Vector2f( 1.0f, 1.0f ), const bool attachToRoot = true, const bool useTileMap = true );
-		Object CreateObject( const std::string& objectFile, const sf::Vector2f& position = sf::Vector2f(), const float rotation = 0.0f, const sf::Vector2f & scale = sf::Vector2f( 1.0f, 1.0f ), const bool attachToRoot = true, const bool useTileMap = true );
+		Object CreateObject( const sf::Vector2f& position = {}, const float rotation = 0.0f, const sf::Vector2f& scale = sf::Vector2f( 1.0f, 1.0f ), const bool attachToRoot = true, const bool useTileMap = true );
+		Object CreateObject( const std::string& objectFile, const sf::Vector2f& position = {}, const float rotation = 0.0f, const sf::Vector2f& scale = sf::Vector2f( 1.0f, 1.0f ), const bool attachToRoot = true, const bool useTileMap = true );
 
 		void DestroyObject( const BaseObject& object );
 		void DestroyAllObjects();
@@ -100,8 +100,8 @@ namespace Reflex::Core
 		EventManager& GetEventManager() { return eventManager; }
 		TileMap& GetTileMap() { return m_tileMap; }
 		const TileMap& GetTileMap() const { return m_tileMap; }
-		b2World& GetBox2DWorld() { return m_box2DWorld; }
-		const b2World& GetBox2DWorld() const { return m_box2DWorld; }
+		b2World& GetBox2DWorld() { return *m_box2DWorld; }
+		const b2World& GetBox2DWorld() const { return *m_box2DWorld; }
 
 		sf::FloatRect GetBounds() const;
 		Reflex::Handle< Reflex::Components::Transform > GetSceneRoot() const;
@@ -116,6 +116,8 @@ namespace Reflex::Core
 		sf::Vector2f GetMousePosition() const;
 		sf::Vector2f GetMousePosition( const Reflex::Handle< Reflex::Components::Camera >& camera ) const;
 		sf::Vector2f RandomWindowPosition( const float margin = 0.0f ) const;
+		sf::Vector2f GetWindowCentre() const { return Reflex::Vector2iToVector2f( GetWindow().getPosition() ) + GetWindowSize() / 2.0f; }
+		sf::Vector2f GetWindowSize() const { return Reflex::Vector2uToVector2f( GetWindow().getSize() ); }
 
 		std::vector< Object > GetObjects();
 
@@ -138,8 +140,8 @@ namespace Reflex::Core
 		sf::View m_worldView;
 		sf::FloatRect m_worldBounds;
 
-		// Box2d world
-		b2World m_box2DWorld;
+		// Box2d world, allocated on the heap because the b2World class is huge (103kb)
+		std::unique_ptr< b2World > m_box2DWorld;
 		float m_box2DUnitToPixelScale = 32;
 		Box2DDebugDraw m_box2DDebugDraw;
 		bool m_box2DUseDebugDraw = true;

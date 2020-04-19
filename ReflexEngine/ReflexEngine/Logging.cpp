@@ -5,6 +5,7 @@ namespace Reflex::Core
 {
 	// Static profiler
 	std::unique_ptr< Profiler > Profiler::s_profiler = nullptr;
+	bool Profiler::s_profilerEnabled = true;
 
 	// Function definitions
 	Profiler& Profiler::GetProfiler()
@@ -16,6 +17,9 @@ namespace Reflex::Core
 
 	void Profiler::StartProfile( const std::string& name )
 	{
+		if( !s_profilerEnabled )
+			return;
+
 		const auto found = m_profileData.find( name );
 
 		if( found == m_profileData.end() )
@@ -33,6 +37,9 @@ namespace Reflex::Core
 
 	void Profiler::EndProfile( const std::string& name )
 	{
+		if( !s_profilerEnabled )
+			return;
+
 		const auto found = m_profileData.find( name );
 		assert( found != m_profileData.end() );
 		const auto duration = found->second.timer.getElapsedTime().asMicroseconds();
@@ -41,7 +48,7 @@ namespace Reflex::Core
 
 	void Profiler::FrameTick( const sf::Int64 frameTime )
 	{
-		if( m_profileData.empty() )
+		if( m_profileData.empty() || !s_profilerEnabled )
 			return;
 
 		m_totalDuration += frameTime;
@@ -62,7 +69,9 @@ namespace Reflex::Core
 
 	void Profiler::OutputResults( const std::string& file )
 	{
-#ifdef PROFILING
+		if( !s_profilerEnabled )
+			return;
+
 		std::ofstream stream( file );
 
 		stream << "********* ReflexEngine Performance Logging System **********\n\n";
@@ -84,7 +93,6 @@ namespace Reflex::Core
 		}
 
 		stream.close();
-#endif
 	}
 
 	ScopedProfiler::ScopedProfiler( const std::string& name )

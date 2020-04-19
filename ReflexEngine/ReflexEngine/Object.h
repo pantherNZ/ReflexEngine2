@@ -29,6 +29,10 @@ namespace Reflex
 		template< class T, typename... Args >
 		Handle< T > AddComponent( Args&& ... args );
 
+		// Same as above, but it is not an error if the component has already been added
+		template< class T, typename... Args >
+		Handle< T > TryAddComponent( Args&& ... args );
+
 		// Removes all components
 		void RemoveAllComponents();
 
@@ -98,6 +102,14 @@ namespace Reflex
 	{
 		GetWorld().template ObjectAddComponent< T >( *this, std::forward<Args>( args )... );
 		return Handle< T >( *this );
+	}
+
+	template< class T, typename... Args >
+	Handle< T > Object::TryAddComponent( Args&& ... args )
+	{
+		if( HasComponent< T >() )
+			return Handle< T >( *this );
+		return AddComponent< T >( std::forward<Args>( args )... );
 	}
 
 	template< class T >

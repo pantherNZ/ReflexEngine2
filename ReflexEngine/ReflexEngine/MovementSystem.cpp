@@ -27,7 +27,7 @@ namespace Reflex
 						transform->setPosition( newPos );
 
 						if( transform->FacesMovementDirection() )
-							transform->setRotation( TODEGREES( Reflex::RotationFromVector( transform->GetVelocity() ) ) );
+							transform->setRotation( Reflex::ToDegrees( Reflex::RotationFromVector( transform->GetVelocity() ) ) );
 					}
 
 					if( transform->m_rotateDurationSec > 0.0f )

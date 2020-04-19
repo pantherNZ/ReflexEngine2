@@ -3,7 +3,7 @@
 // Includes
 #include "VectorMap.h"
 
-//#define PROFILING
+#define PROFILING
 #define LOGGING
 
 namespace Reflex
@@ -56,6 +56,7 @@ namespace Reflex
 
 			Reflex::VectorMap< std::string, ProfileData > m_profileData;
 			static std::unique_ptr< Profiler > s_profiler;
+			static bool s_profilerEnabled;
 		};
 
 		class ScopedProfiler : sf::NonCopyable

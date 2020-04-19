@@ -14,7 +14,7 @@ namespace Reflex::Core
 	public:
 		friend class StateManager;
 
-		State( StateManager& stateManager, Context context );
+		State( StateManager& stateManager );
 		virtual ~State() { }
 
 		virtual void Render() { }
@@ -27,23 +27,19 @@ namespace Reflex::Core
 		void RequestRemoveState();
 		void RequestRemoveAllStates();
 
-		sf::RenderWindow& GetWindow() { return m_context.window; }
-		const sf::RenderWindow& GetWindow() const { return m_context.window; }
-		World& GetWorld() { return m_world; }
-		const World& GetWorld() const { return m_world; }
-		TextureManager& GetTextureManager() { return m_context.textureManager; }
-		FontManager& GetFontManager() { return m_context.fontManager; }
-		sf::Vector2f GetMousePosition( const Reflex::Components::Camera::Handle& camera = Reflex::Components::Camera::Handle() ) const { return m_world.GetMousePosition( camera ); }
+		sf::RenderWindow& GetWindow() { return GetWorld().GetWindow(); }
+		const sf::RenderWindow& GetWindow() const { return GetWorld().GetWindow(); }
+		World& GetWorld();
+		const World& GetWorld() const;
+		TextureManager& GetTextureManager() { return GetWorld().GetTextureManager(); }
+		FontManager& GetFontManager() { return GetWorld().GetFontManager(); }
+		sf::Vector2f GetMousePosition( const Reflex::Components::Camera::Handle& camera = Reflex::Components::Camera::Handle() ) const { return GetWorld().GetMousePosition( camera ); }
 
 	private:
 		State();
 
 	private:
 		StateManager& m_stateManager;
-		Context m_context;
-
-		sf::FloatRect m_windowBounds;
-		World m_world;
 	};
 
 	class StateManager : private sf::NonCopyable
@@ -56,7 +52,7 @@ namespace Reflex::Core
 			Clear,
 		};
 
-		explicit StateManager( Context context );
+		explicit StateManager( World& world );
 
 		template< typename T >
 		void RegisterState();
@@ -73,6 +69,9 @@ namespace Reflex::Core
 
 		bool IsEmpty() const;
 
+		const World& GetWorld() const { return m_world; }
+		World& GetWorld() { return m_world; }
+
 	private:
 		template< typename T >
 		std::unique_ptr< State > CreateState();
@@ -82,7 +81,7 @@ namespace Reflex::Core
 	private:
 		std::vector< std::pair< Type, Action > > m_pendingList;
 		std::vector< std::unique_ptr< State > > m_ActiveStates;
-		Context m_context;
+		World& m_world;
 
 		std::unordered_map< Type, std::function< std::unique_ptr< State >( void ) > > m_stateFactories;
 	};
@@ -95,7 +94,7 @@ namespace Reflex::Core
 
 		m_stateFactories[stateType] = [this]()
 		{
-			return std::make_unique< T >( *this, m_context );
+			return std::make_unique< T >( *this );
 		};
 	}
 

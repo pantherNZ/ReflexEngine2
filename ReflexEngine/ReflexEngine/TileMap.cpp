@@ -231,7 +231,7 @@ namespace Reflex::Core
 	unsigned TileMap::GetCellId( const sf::Vector2f& position ) const
 	{
 		const auto chunk = ChunkHash( position );
-		const auto startPosition = Reflex::Vector2iToVector2f( chunk ) * (float )m_chunkSize;
+		const auto startPosition = Reflex::Vector2iToVector2f( chunk ) * ( float )m_chunkSize;
 		const auto loc = CellHash( position - startPosition );
 		return loc.y * m_chunkSizeInCells + loc.x;
 	}
@@ -248,12 +248,12 @@ namespace Reflex::Core
 
 	sf::Vector2i TileMap::CellHash( const sf::Vector2f& position ) const
 	{
-		return sf::Vector2i( int( position.x / m_cellSize ), int( position.y / m_cellSize ) );
+		return sf::Vector2i( int( std::floor( position.x / ( float )m_cellSize ) ), int( std::floor( position.y / ( float )m_cellSize ) ) );
 	}
 
 	sf::Vector2i TileMap::ChunkHash( const sf::Vector2f& position ) const
 	{
-		return sf::Vector2i( int( position.x / m_chunkSize ), int( position.y / m_chunkSize ) );
+		return sf::Vector2i( int( std::floor( position.x / ( float )m_chunkSize ) ), int( std::floor( position.y / ( float )m_chunkSize ) ) );
 	}
 
 	bool TileMap::IsValid() const

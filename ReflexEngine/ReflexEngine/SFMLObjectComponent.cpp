@@ -172,8 +172,19 @@ namespace Reflex::Components
 
 	void CircleShape::CreateRigidBody( const b2BodyType type )
 	{
-		if( !GetObject().HasComponent< Reflex::Components::RigidBody >() )
-			GetObject().AddComponent< Reflex::Components::RigidBody >( type );
+		GetObject().TryAddComponent< Reflex::Components::RigidBody >( type );
 		GetObject().AddComponent< Reflex::Components::CircleCollider >( getRadius() );
+	}
+
+	void RectangleShape::CreateRigidBody( const b2BodyType type )
+	{
+		GetObject().TryAddComponent< Reflex::Components::RigidBody >( type );
+		GetObject().AddComponent< Reflex::Components::RectangleCollider >( getSize() );
+	}
+
+	void ConvexShape::CreateRigidBody( const b2BodyType type )
+	{
+		GetObject().TryAddComponent< Reflex::Components::RigidBody >( type );
+		GetObject().AddComponent< Reflex::Components::ConvexCollider >( m_points );
 	}
 }

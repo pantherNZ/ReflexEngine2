@@ -19,8 +19,8 @@ int main()
 class TestState : public Core::State, public UnitTesting
 {
 public:
-	TestState( Core::StateManager& stateManager, Core::Context context )
-		: State( stateManager, context )
+	TestState( Core::StateManager& stateManager )
+		: State( stateManager )
 	{
 		RegisterSection( "---- Reflex Utility functions -------" );
 		RegisterTest( std::bind( Reflex::IsDefault< sf::Vector2f >, sf::Vector2f() ), true, "Reflex::IsDefault with sf::Vector2f" );

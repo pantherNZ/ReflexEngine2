@@ -15,7 +15,7 @@ namespace Reflex::Components
 		friend class Reflex::Systems::MovementSystem;
 		friend class Grid;
 
-		Transform( const Reflex::Object& owner, const sf::Vector2f& position = sf::Vector2f(), const float rotation = 0.0f, const sf::Vector2f & scale = sf::Vector2f( 1.0f, 1.0f ), const bool useTileMap = true );
+		Transform( const Reflex::Object& owner, const sf::Vector2f& position = {}, const float rotation = 0.0f, const sf::Vector2f & scale = sf::Vector2f( 1.0f, 1.0f ), const bool useTileMap = true );
 		Transform( const Transform& other );
 
 		void OnConstructionComplete();

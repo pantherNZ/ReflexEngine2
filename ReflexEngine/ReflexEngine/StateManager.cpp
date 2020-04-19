@@ -3,41 +3,35 @@
 
 namespace Reflex::Core
 {
-	StateManager::StateManager( Context context )
-		: m_context( context )
+	StateManager::StateManager( World& world )
+		: m_world( world )
 	{
 
 	}
 
 	void StateManager::Update( const float deltaTime )
 	{
+		m_world.Update( deltaTime );
 		const auto size = m_pendingList.size();
 		for( auto itr = m_ActiveStates.rbegin(); itr != m_ActiveStates.rend() && size == m_pendingList.size(); ++itr )
-		{
-			( *itr )->m_world.Update( deltaTime );
 			( *itr )->Update( deltaTime );
-		}
 
 		ApplyPendingChanges();
 	}
 
 	void StateManager::Render()
 	{
+		m_world.Render();
 		for( auto& state : m_ActiveStates )
-		{
-			state->m_world.Render();
 			state->Render();
-		}
 	}
 
 	void StateManager::ProcessEvent( const sf::Event& event )
 	{
+		m_world.ProcessEvent( event );
 		const auto size = m_pendingList.size();
 		for( auto itr = m_ActiveStates.rbegin(); itr != m_ActiveStates.rend() && size == m_pendingList.size(); ++itr )
-		{
-			( *itr )->m_world.ProcessEvent( event );
 			( *itr )->ProcessEvent( event );
-		}
 
 		ApplyPendingChanges();
 	}
@@ -92,13 +86,9 @@ namespace Reflex::Core
 	}
 
 	// State class
-	State::State( StateManager& stateManager, Context context )
+	State::State( StateManager& stateManager )
 		: m_stateManager( stateManager )
-		, m_context( context )
-		, m_windowBounds( 0.0f, 0.0f, (float )context.window.getSize().x, (float )context.window.getSize().y )
-		, m_world( context, m_windowBounds )
 	{
-
 	}
 
 	void State::RequestRemoveState()
@@ -109,5 +99,15 @@ namespace Reflex::Core
 	void State::RequestRemoveAllStates()
 	{
 		m_stateManager.ClearStates();
+	}
+
+	World& State::GetWorld()
+	{
+		return m_stateManager.GetWorld();
+	}
+
+	const World& State::GetWorld() const
+	{
+		return m_stateManager.GetWorld();
 	}
 }
