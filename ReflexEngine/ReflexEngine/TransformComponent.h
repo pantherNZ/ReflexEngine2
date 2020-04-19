@@ -3,7 +3,7 @@
 #include "Component.h"
 #include "SceneNode.h"
 #include "MovementSystem.h"
-#include "EventManager.h"
+#include "Events.h"
 
 namespace Reflex::Components
 {

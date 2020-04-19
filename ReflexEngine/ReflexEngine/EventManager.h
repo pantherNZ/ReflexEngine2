@@ -1,84 +1,13 @@
 #pragma once
 
+#include "Events.h"
+
 #include <memory>
 #include <vector>
 #include <functional>
 
 namespace Reflex::Core
 {
-	// Event object itself
-	struct BaseEvent
-	{
-		virtual ~BaseEvent() {}
-	protected:
-		static size_t typeCounter;
-	};
-
-	template< typename EventType >
-	struct Event : BaseEvent
-	{
-		static size_t GetType()
-		{
-			static size_t type = BaseEvent::typeCounter++;
-			return type;
-		}
-
-		Event( const EventType& event ) : event( event ) {}
-		const EventType& event;
-	};
-
-	class World;
-
-	// Event receiver
-	struct EventReceiver
-	{
-		friend class EventManager;
-
-		EventReceiver() { }
-		virtual ~EventReceiver();
-
-	protected:
-		EventReceiver( const EventReceiver& other )
-			: receiverIndex( std::nullopt )
-			, eventManager( other.eventManager )
-		{
-		}
-
-	protected:
-		std::optional< unsigned > receiverIndex;
-		EventManager* eventManager = nullptr;
-	};
-
-	// Event triggerer
-	struct EventTriggerer
-	{
-		EventTriggerer( EventManager& eventManager );
-		EventTriggerer( World& world );
-		virtual ~EventTriggerer();
-
-		template< typename EventType, typename ReceiverType >
-		void Subscribe( ReceiverType& receiver, void ( ReceiverType::* func )( const EventType& ) );
-
-		template< typename ReceiverType >
-		void Unsubscribe( ReceiverType& receiver );
-
-	protected:
-		friend class EventManager;
-
-		EventTriggerer( const EventTriggerer& other )
-			: triggererIndex( std::nullopt )
-			, eventManager( other.eventManager )
-		{
-		}
-
-		template< typename EventType >
-		void Emit( const EventType& event );
-
-	private:
-		std::optional< unsigned > triggererIndex;
-		EventManager& eventManager;
-	};
-
 	class EventManager
 	{
 	public:
@@ -99,35 +28,17 @@ namespace Reflex::Core
 
 		void Unsubscribe( EventReceiver& receiver )
 		{
-			for( auto& eventType : m_subscribers )
-			{
-				Reflex::EraseIf( eventType, [&receiver]( const ReceiverInstance& instance )
-				{
-					return instance.receiverIndex == receiver.receiverIndex;
-				} );
-			}
+			UnsubscribeInternal( nullptr, &receiver );
 		}
 
 		void Unsubscribe( EventTriggerer& triggerer, EventReceiver& receiver )
 		{
-			for( auto& eventType : m_subscribers )
-			{
-				Reflex::EraseIf( eventType, [&]( const ReceiverInstance& instance )
-				{
-					return instance.receiverIndex == receiver.receiverIndex && instance.triggererIndex == triggerer.triggererIndex;
-				} );
-			}
+			UnsubscribeInternal( &triggerer, &receiver );
 		}
 
 		void RemoveTriggerer( EventTriggerer& triggerer )
 		{
-			for( auto& eventType : m_subscribers )
-			{
-				Reflex::EraseIf( eventType, [&triggerer]( const ReceiverInstance& instance )
-				{
-					return instance.triggererIndex && instance.triggererIndex == triggerer.triggererIndex;
-				} );
-			}
+			UnsubscribeInternal( &triggerer, nullptr );
 		}
 
 		template< typename EventType >
@@ -163,6 +74,8 @@ namespace Reflex::Core
 		template< typename EventType, typename ReceiverType >
 		void SubscribeInternal( EventTriggerer* triggerer, ReceiverType& receiver, void ( ReceiverType::* func )( const EventType& ) )
 		{
+			static_assert( std::is_convertible<ReceiverType*, EventReceiver*>::value, "To receive events you must inherit from Reflex::EventReceiver" );
+
 			if( triggerer && !triggerer->triggererIndex )
 				triggerer->triggererIndex = nextTriggererIndex++;
 
@@ -178,7 +91,31 @@ namespace Reflex::Core
 			if( type >= m_subscribers.size() )
 				m_subscribers.resize( type + 1 );
 
-			m_subscribers[type].push_back( { CallbackWrapper< EventType >( callable ), triggerer ? triggerer->triggererIndex : std::nullopt, *receiver.receiverIndex } );
+			const auto triggererIdx = triggerer ? triggerer->triggererIndex : std::nullopt;
+
+			// Already subscribed? Don't subscribe twice
+			if( Reflex::ContainsIf( m_subscribers[type], [&]( const ReceiverInstance& instance )
+			{
+				return instance.receiverIndex == triggererIdx && instance.receiverIndex == *receiver.receiverIndex;
+			} ) )
+				return;
+
+			m_subscribers[type].push_back( { CallbackWrapper< EventType >( callable ), triggererIdx, *receiver.receiverIndex } );
+		}
+
+		void UnsubscribeInternal( EventTriggerer* triggerer, EventReceiver* receiver )
+		{
+			assert( triggerer || receiver );
+
+			for( auto& eventType : m_subscribers )
+			{
+				Reflex::EraseIf( eventType, [&]( const ReceiverInstance& instance )
+				{
+					return ( !triggerer || ( triggerer->triggererIndex && instance.triggererIndex == triggerer->triggererIndex ) ) &&
+						( !receiver || ( receiver->receiverIndex && instance.receiverIndex == receiver->receiverIndex ) );
+						
+				} );
+			}
 		}
 
 		struct ReceiverInstance

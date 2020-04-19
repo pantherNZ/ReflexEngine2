@@ -17,7 +17,7 @@ namespace Reflex::Components
 		bool IsRenderComponent() const final { return true; }
 		void Render( sf::RenderTarget& target, sf::RenderStates states ) const final { target.draw( *this, states ); }
 
-		void CreateRigidBody();
+		void CreateRigidBody( const b2BodyType type = b2BodyType::b2_staticBody );
 	};
 
 	class RectangleShape : public Component< RectangleShape >, public sf::RectangleShape

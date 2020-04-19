@@ -5,6 +5,7 @@ namespace Reflex { class Object; }
 
 namespace Reflex::Systems
 {
+	// Abstract class for internal use. Custom systems should inherit from System
 	class BaseSystem : private sf::NonCopyable, public sf::Drawable
 	{
 	public:

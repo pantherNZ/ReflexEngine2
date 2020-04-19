@@ -12,6 +12,7 @@ namespace Reflex
 	typedef unsigned char ComponentFamily;
 	constexpr ComponentFamily MaxComponents = 32;
 	typedef std::bitset< MaxComponents > ComponentsMask;
+	extern std::optional< float > box2DUnitToPixelScale;
 
 	// Math common
 	#define PI					3.141592654f
@@ -334,14 +335,40 @@ namespace Reflex
 		return sf::Vector2i( ( int )convert.x, ( int )convert.y );
 	}
 
-	inline sf::Vector2f B2VecToVector2f( const b2Vec2& vector, const float scaleValue = 1.0f )
+	inline sf::Vector2f B2VecToVector2f( const b2Vec2& vector, const float scaleValue)
 	{
 		return sf::Vector2f( vector.x, vector.y ) * scaleValue;
 	}
 
-	inline b2Vec2 Vector2fToB2Vec( const sf::Vector2f& vector, const float scaleValue = 1.0f )
+	// This version is intended to be used after setting the global extern variable box2DUnitToPixelScale to your correct box2d scale conversion (eg. 32 units to 1 box2d unit)
+	inline sf::Vector2f B2VecToVector2f( const b2Vec2& vector )
+	{
+		assert( box2DUnitToPixelScale );
+		return sf::Vector2f( vector.x, vector.y ) * *box2DUnitToPixelScale;
+	}
+
+	inline b2Vec2 Vector2fToB2Vec( const sf::Vector2f& vector, const float scaleValue )
 	{
 		return b2Vec2( vector.x / scaleValue, vector.y / scaleValue );
+	}
+
+	// This version is intended to be used after setting the global extern variable box2DUnitToPixelScale to your correct box2d scale conversion (eg. 32 units to 1 box2d unit)
+	inline b2Vec2 Vector2fToB2Vec( const sf::Vector2f& vector )
+	{
+		assert( box2DUnitToPixelScale );
+		return b2Vec2( vector.x / *box2DUnitToPixelScale, vector.y / *box2DUnitToPixelScale );
+	}
+
+	inline float ToBox2DUnits( const float worldUnits ) 
+	{ 
+		assert( box2DUnitToPixelScale );
+		return worldUnits / *box2DUnitToPixelScale;
+	}
+
+	inline float ToWorldUnits( const float b2Units ) 
+	{
+		assert( box2DUnitToPixelScale );
+		return b2Units * *box2DUnitToPixelScale;
 	}
 
 	inline sf::Color ToColour( const std::array< float, 3 >& colour )
@@ -579,10 +606,22 @@ namespace Reflex
 		return std::find( container.begin(), container.end(), value );
 	}
 
+	template< typename T, typename Pred >
+	typename std::vector<T>::const_iterator FindIf( const std::vector<T>& container, const Pred& pred )
+	{
+		return std::find_if( container.begin(), container.end(), pred );
+	}
+
 	template< typename T >
 	bool Contains( const std::vector< T >& container, const T& value )
 	{
 		return Find( container, value ) != container.end();
+	}
+
+	template< typename T, typename Pred >
+	bool ContainsIf( const std::vector< T >& container, const Pred& pred )
+	{
+		return FindIf( container, pred ) != container.end();
 	}
 
 	template< typename T, typename... Args >

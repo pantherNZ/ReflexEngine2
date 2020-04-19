@@ -3,6 +3,8 @@
 
 namespace Reflex
 {
+	std::optional< float > box2DUnitToPixelScale;
+
 	std::vector< std::string > Split( const std::string& _strInput, const char _cLetter )
 	{
 		std::vector< std::string > vecReturn;

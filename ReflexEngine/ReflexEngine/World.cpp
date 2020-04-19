@@ -1,21 +1,5 @@
 #include "Precompiled.h"
-
-#include "World.h"
-#include "Object.h"
-#include "System.h"
-
-#include "TransformComponent.h"
-#include "CameraComponent.h"
-#include "InteractableComponent.h"
-#include "SFMLObjectComponent.h"
-#include "GridComponent.h"
-
-#include "RenderSystem.h"
-#include "InteractableSystem.h"
-#include "MovementSystem.h"
-#include "CameraSystem.h"
-#include "SteeringSystem.h"
-#include "PhysicsSystem.h"
+#include "Include.h"
 
 namespace Reflex::Core
 {
@@ -27,6 +11,7 @@ namespace Reflex::Core
 		, m_box2DWorld( b2Vec2( gravity.x, gravity.y ) )
 		, m_box2DDebugDraw( context.window, m_box2DUnitToPixelScale )
 	{
+		Reflex::box2DUnitToPixelScale = m_box2DUnitToPixelScale;
 		Setup();
 	}
 
@@ -47,6 +32,8 @@ namespace Reflex::Core
 		RegisterComponent< Reflex::Components::Grid >();
 		RegisterComponent< Reflex::Components::Camera >();
 		RegisterComponent< Reflex::Components::Steering >();
+		RegisterComponent< Reflex::Components::RigidBody >();
+		RegisterComponent< Reflex::Components::CircleCollider >();
 
 		AddSystem< Reflex::Systems::RenderSystem >();
 		AddSystem< Reflex::Systems::InteractableSystem >();

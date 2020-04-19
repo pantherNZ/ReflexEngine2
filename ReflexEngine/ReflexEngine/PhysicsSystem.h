@@ -11,7 +11,5 @@ namespace Reflex::Systems
 
 		void RegisterComponents() final;
 		void Update( const float deltaTime ) final;
-
-		virtual bool ShouldAddObject( const Object& object ) const final;
 	};
 }

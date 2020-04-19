@@ -20,6 +20,7 @@ namespace Reflex::Components
 {
 	class Transform;
 
+	// Abstract class for internal use, custom components should inherit from Component below
 	class BaseComponent
 	{
 	public:
@@ -35,8 +36,8 @@ namespace Reflex::Components
 		BaseComponent() {}
 		BaseComponent( const BaseComponent& other );
 		virtual ~BaseComponent() {}
-		virtual void OnConstructionComplete() { }
-		virtual void OnDestructionBegin() { }
+		virtual void OnConstructionComplete() = 0;
+		virtual void OnDestructionBegin() = 0;
 		static std::string GetComponentName() { assert( false ); }
 
 		// Serialisation
@@ -51,7 +52,10 @@ namespace Reflex::Components
 		static ComponentFamily s_componentFamilyIdx;
 	};
 
-	template< typename T >
+	// Custom components should inherit from this class and pass the custom class as type T
+	// RequiresComponents is an optional parameter that defines components that are required for the component to work
+	//	When a component is added, it will automatically add all required components if not already added
+	template< typename T, typename... RequiresComponents >
 	class Component : public BaseComponent
 	{
 	public:
@@ -66,6 +70,17 @@ namespace Reflex::Components
 			assert( s_family < MaxComponents );
 			return s_family;
 		}
+
+		static ComponentsMask GetRequiredComponents()
+		{
+			ComponentsMask mask;
+			unsigned long ul;
+			ul = ( ( 1 << RequiresComponents::GetFamily() ) | ... | 0 );
+			return ComponentsMask( ul );
+		}
+
+		virtual void OnConstructionComplete() override { };
+		virtual void OnDestructionBegin() override { }
 
 	protected:
 		using BaseComponent::BaseComponent;

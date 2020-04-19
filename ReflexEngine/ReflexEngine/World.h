@@ -54,6 +54,7 @@ namespace Reflex::Core
 		T* ObjectAddComponent( const BaseObject& object, Args&& ... args );
 
 		// Adds an empty component (no args passed, non templated) - Used to add components from .ro files
+		// The allocator must be already created (as in a component of the require type must already be registered or exist)
 		Reflex::Components::BaseComponent* ObjectAddEmptyComponent( const Object& object, const size_t family );
 
 		template< class T >
@@ -164,7 +165,6 @@ namespace Reflex::Core
 
 		// Storage for all components
 		std::vector< std::unique_ptr< ComponentAllocatorBase > > m_components;
-		//std::vector<  > m_componentEvents;
 		std::unordered_map< std::string, size_t > m_componentNameToIndex;
 		std::queue< unsigned > m_freeList;
 
@@ -181,12 +181,14 @@ namespace Reflex::Core
 	{
 		const auto family = T::GetFamily();
 
+		// Can't add multiple of the same component
 		if( m_objects.components[object.GetIndex()].test( family ) )
 		{
 			LOG_CRIT( "You cannot add multiple of the same component!" );
 			return {};
 		}
 
+		// Create allocator for this component type if it is new (usually this is done via the RegisterComponent< T > function)
 		if( family >= m_components.size() )
 		{
 			assert( family == m_components.size() );
@@ -195,11 +197,21 @@ namespace Reflex::Core
 		else
 			m_components[family]->ExpandToFit( object.GetIndex() + 1 );
 
+		// Allocate memory and construct, passing args through
 		auto* allocator = static_cast< ComponentAllocator< T >* >( m_components[family].get() );
 		auto newComponent = static_cast< T* >( allocator->Construct( object.GetIndex(), object, std::forward<Args>( args )... ) );
 		m_objects.components[object.GetIndex()].set( family );
+
+		const auto requiredComponents = T::GetRequiredComponents();
+
+		// Automatically add required components
+		for( unsigned i = 0; i < MaxComponents; ++i )
+			if( requiredComponents.test( i ) && !m_objects.components[object.GetIndex()].test( i ) )
+				ObjectAddEmptyComponent( object, i );
+
 		newComponent->OnConstructionComplete();
 		OnComponentAdded( object );
+
 		return newComponent;
 	}
 

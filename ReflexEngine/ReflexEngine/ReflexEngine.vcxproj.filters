@@ -156,8 +156,14 @@
     <ClInclude Include="Box2DDebugDraw.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="Box2DShapeComponent.h">
+    <ClInclude Include="ColliderComponent.h">
       <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="RigidBodyComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Events.h">
+      <Filter>Managers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

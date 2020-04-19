@@ -22,7 +22,9 @@
     <ClInclude Include="BaseObject.h" />
     <ClInclude Include="BaseSystem.h" />
     <ClInclude Include="Box2DDebugDraw.h" />
-    <ClInclude Include="Box2DShapeComponent.h" />
+    <ClInclude Include="ColliderComponent.h" />
+    <ClInclude Include="Events.h" />
+    <ClInclude Include="RigidBodyComponent.h" />
     <ClInclude Include="CameraComponent.h" />
     <ClInclude Include="CameraSystem.h" />
     <ClInclude Include="Component.h" />

@@ -1,7 +1,7 @@
 #include "Precompiled.h"
 #include "SFMLObjectComponent.h"
 #include "Object.h"
-#include "Box2DShapeComponent.h"
+#include "ColliderComponent.h"
 
 namespace Reflex::Components
 {
@@ -170,8 +170,10 @@ namespace Reflex::Components
 		values.emplace_back( "Style", Reflex::ToString( getStyle() ) );
 	}
 
-	void CircleShape::CreateRigidBody()
+	void CircleShape::CreateRigidBody( const b2BodyType type )
 	{
-		GetObject().AddComponent< Reflex::Components::Box2DShapeComponent >( getRadius() );
+		if( !GetObject().HasComponent< Reflex::Components::RigidBody >() )
+			GetObject().AddComponent< Reflex::Components::RigidBody >( type );
+		GetObject().AddComponent< Reflex::Components::CircleCollider >( getRadius() );
 	}
 }
