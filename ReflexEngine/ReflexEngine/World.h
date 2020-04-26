@@ -93,6 +93,8 @@ namespace Reflex::Core
 		/*---------------*/
 
 		// Utility and helper functions
+		float GetDeltaTime() const { return m_deltaTime; }
+
 		sf::RenderWindow& GetWindow() { return m_context.window; }
 		const sf::RenderWindow& GetWindow() const { return m_context.window; }
 		TextureManager& GetTextureManager() { return m_context.textureManager; }
@@ -125,6 +127,24 @@ namespace Reflex::Core
 		float ToBox2DUnits( const float worldUnits ) const { return worldUnits / m_box2DUnitToPixelScale; }
 		float ToWorldUnits( const float b2Units ) const { return b2Units * m_box2DUnitToPixelScale; }
 
+		struct RayCastResult 
+		{
+			RayCastResult() { }
+			RayCastResult( Object object, b2Fixture* fixture, const sf::Vector2f& point, const sf::Vector2f& normal, const float fraction );
+			bool hit = false;
+			b2Fixture* fixture = nullptr;
+			const sf::Vector2f point;
+			const sf::Vector2f normal;
+			float fraction = 0.0f;
+			operator bool() const;
+			Object GetObject() const;
+
+		private:
+			BaseObject object;
+		};
+
+		RayCastResult RayCast( const sf::Vector2f& from, const sf::Vector2f& to );
+
 	protected:
 		void Setup();
 		Object ObjectFromIndex( const unsigned index );
@@ -139,6 +159,8 @@ namespace Reflex::Core
 		Context m_context;
 		sf::View m_worldView;
 		sf::FloatRect m_worldBounds;
+
+		float m_deltaTime = 0.0f;
 
 		// Box2d world, allocated on the heap because the b2World class is huge (103kb)
 		std::unique_ptr< b2World > m_box2DWorld;

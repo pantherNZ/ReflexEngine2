@@ -508,15 +508,37 @@ namespace Reflex
 		return GetMagnitude( a - b );
 	}
 
+	inline sf::Vector2f Normalise( sf::Vector2f& v )
+	{
+		const auto magnitude = GetMagnitude( v );
+		v = ( magnitude <= 0.0001f ? sf::Vector2f() : v / magnitude );
+		return v;
+	}
+
 	inline sf::Vector2f Normalise( const sf::Vector2f& v )
 	{
-		return v / GetMagnitude( v );
+		const auto magnitude = GetMagnitude( v );
+		return magnitude <= 0.0001f ? sf::Vector2f() : v / magnitude;
+	}
+
+	inline sf::Vector2f Truncate( sf::Vector2f& v, const float maxMagnitude )
+	{
+		const auto magnitude = GetMagnitude( v );
+		v = magnitude > maxMagnitude ? Normalise( v ) * maxMagnitude : v;
+		return v;
 	}
 
 	inline sf::Vector2f Truncate( const sf::Vector2f& v, const float maxMagnitude )
 	{
 		const auto magnitude = GetMagnitude( v );
 		return magnitude > maxMagnitude ? Normalise( v ) * maxMagnitude : v;
+	}
+
+	inline sf::Vector2f ScaleTo( sf::Vector2f& v, const float magnitude )
+	{
+		Normalise( v );
+		v *= magnitude;
+		return v;
 	}
 
 	inline sf::Vector2f ScaleTo( const sf::Vector2f& v, const float magnitude )

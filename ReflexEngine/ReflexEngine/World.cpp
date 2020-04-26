@@ -53,7 +53,7 @@ namespace Reflex::Core
 	void World::Update( const float deltaTime )
 	{
 		PROFILE;
-
+		m_deltaTime = deltaTime;
 		m_box2DWorld->Step( deltaTime, m_box2DVelocityIterations, m_box2DPositionIterations );
 
 		// Update systems
@@ -444,4 +444,50 @@ namespace Reflex::Core
 
 		return output;
 	}
+
+	World::RayCastResult World::RayCast( const sf::Vector2f& from, const sf::Vector2f& to )
+	{
+		class RayCastCallback : public b2RayCastCallback {
+		public:
+			std::vector< RayCastResult > foundBodies;
+
+			float ReportFixture( b2Fixture* fixture, const b2Vec2& point, const b2Vec2& normal, float fraction ) final
+			{
+				const auto object = *(Object* )fixture->GetBody()->GetUserData();
+				foundBodies.push_back( RayCastResult( object, fixture, Reflex::B2VecToVector2f( point ), Reflex::B2VecToVector2f( normal ), fraction ) );
+				return true;
+			}
+		};
+
+		RayCastCallback callback;
+		GetBox2DWorld().RayCast( &callback, Reflex::Vector2fToB2Vec( from ), Reflex::Vector2fToB2Vec( to ) );
+
+		const auto min = std::min_element( callback.foundBodies.begin(), callback.foundBodies.end(), [&from]( const auto& a, const auto& b )
+		{
+			return Reflex::GetDistanceSq( a.GetObject().GetTransform()->getPosition(), from ) < Reflex::GetDistanceSq( b.GetObject().GetTransform()->getPosition(), from );
+		} );
+
+		return min == callback.foundBodies.end() ? RayCastResult() : *min;
+	}
+
+	World::RayCastResult::RayCastResult( Object object, b2Fixture* fixture, const sf::Vector2f& point, const sf::Vector2f& normal, const float fraction )
+		: hit( true )
+		, object( object )
+		, fixture( fixture )
+		, point( point )
+		, normal( normal )
+		, fraction( fraction )
+	{
+	}
+
+	World::RayCastResult::operator bool() const
+	{
+		return GetObject().IsValid();
+	}
+
+	Reflex::Object World::RayCastResult::GetObject() const
+	{
+		return ( Object )object;
+	}
+
 }

@@ -7,6 +7,8 @@
 
 namespace Reflex::Systems
 {
+	using namespace Reflex::Components;
+
 	void SteeringSystem::RegisterComponents()
 	{
 		RequiresComponent( Reflex::Components::Steering );
@@ -29,39 +31,40 @@ namespace Reflex::Systems
 		if( boid->m_maxForce <= 0.0f || transform->GetMaxVelocity() <= 0.0f )
 			return;
 
-		boid->m_desired = Steering( boid );
-		boid->m_steering = boid->m_desired - transform->GetVelocity();
-
-		boid->m_steering = Reflex::ScaleTo( boid->m_steering, boid->m_maxForce );
-		boid->m_steering /= boid->m_mass;
-
-		transform->SetVelocity( transform->GetVelocity() + boid->m_steering );
+		boid->m_steering = Steering( boid );
+		const auto acceleration = boid->m_steering / boid->m_mass;
+		transform->SetVelocity( transform->GetVelocity() + acceleration * deltaTime );
 	}
 
 	sf::Vector2f SteeringSystem::Steering( const Steering::Handle& boid ) const
 	{
 		sf::Vector2f steering;
-		if( boid->IsBehaviourSet( Steering::Behaviours::Seek ) )		steering += Seek( boid, boid->m_targetPosition );
-		if( boid->IsBehaviourSet( Steering::Behaviours::Flee ) )		steering += Flee( boid, boid->m_targetPosition );
-		if( boid->IsBehaviourSet( Steering::Behaviours::Arrival ) )		steering += Arrival( boid, boid->m_targetPosition );
-		if( boid->IsBehaviourSet( Steering::Behaviours::Wander ) )		steering += Wander( boid );
-		if( boid->IsBehaviourSet( Steering::Behaviours::Pursue ) )		steering += Pursue( boid, boid->m_targetObject );
-		if( boid->IsBehaviourSet( Steering::Behaviours::Evade ) )		steering += Evade( boid, boid->m_targetObject );
-		if( boid->IsBehaviourSet( Steering::Behaviours::Alignment ) ||
-			boid->IsBehaviourSet( Steering::Behaviours::Cohesion )  ||
-			boid->IsBehaviourSet( Steering::Behaviours::Separation ) )	steering += Flocking( boid );
+		if( boid->IsBehaviourSet( SteeringBehaviours::Seek ) )					steering += Seek( boid, boid->m_targetObject ? boid->m_targetObject.GetTransform()->getPosition() : boid->m_targetPosition );
+		if( boid->IsBehaviourSet( SteeringBehaviours::Flee ) )					steering += Flee( boid, boid->m_targetObject ? boid->m_targetObject.GetTransform()->getPosition() : boid->m_targetPosition );
+		if( boid->IsBehaviourSet( SteeringBehaviours::Arrival ) )				steering += Arrival( boid, boid->m_targetObject ? boid->m_targetObject.GetTransform()->getPosition() : boid->m_targetPosition );
+		if( boid->IsBehaviourSet( SteeringBehaviours::Wander ) )				steering += Wander( boid );
+		if( boid->IsBehaviourSet( SteeringBehaviours::Pursue ) )				steering += Pursue( boid, boid->m_targetObject );
+		if( boid->IsBehaviourSet( SteeringBehaviours::Evade ) )					steering += Evade( boid, boid->m_targetObject );
+		if( boid->IsBehaviourSet( SteeringBehaviours::Alignment ) ||
+			boid->IsBehaviourSet( SteeringBehaviours::Cohesion ) ||
+			boid->IsBehaviourSet( SteeringBehaviours::Separation ) )			steering += Flocking( boid );
+		if( boid->IsBehaviourSet( SteeringBehaviours::ObstacleAvoidance ) )		steering += ObstacleAvoidance( boid );
 
-		return steering;
+		return Reflex::Truncate( steering, boid->m_maxForce );
 	}
 
 	sf::Vector2f SteeringSystem::Seek( const Steering::Handle& boid, const sf::Vector2f& target ) const
 	{
-		const auto pos = boid->GetTransform()->getPosition();
+		const auto transform = boid->GetTransform();
+		const auto pos = transform->getPosition();
+
 		if( target == pos )
 			return {};
+
 		if( boid->m_ignoreDistance > 0.0f && Reflex::GetDistanceSq( target, pos ) >= boid->m_ignoreDistance * boid->m_ignoreDistance )
 			return {};
-		return Reflex::ScaleTo( target - pos, boid->m_maxForce );
+
+		return ( Reflex::ScaleTo( target - pos, transform->GetMaxVelocity() ) - transform->GetVelocity() ) * boid->m_seekForce * boid->m_forceMultiplier;
 	}
 
 	sf::Vector2f SteeringSystem::Flee( const Steering::Handle& boid, const sf::Vector2f& target ) const
@@ -71,7 +74,8 @@ namespace Reflex::Systems
 
 	sf::Vector2f SteeringSystem::Arrival( const Steering::Handle& boid, const sf::Vector2f& target ) const
 	{
-		const auto direction = target - boid->GetTransform()->getPosition();
+		const auto transform = boid->GetTransform();
+		const auto direction = target - transform->getPosition();
 
 		if( boid->m_ignoreDistance > 0.0f && Reflex::GetMagnitudeSq( direction ) >= boid->m_ignoreDistance * boid->m_ignoreDistance )
 			return {};
@@ -82,7 +86,7 @@ namespace Reflex::Systems
 			return {};
 
 		const auto speedModifier = length < boid->m_slowingRadius ? length / boid->m_slowingRadius : 1.0f;
-		return ( direction / length ) * boid->GetTransform()->GetMaxVelocity() * speedModifier;
+		return ( ( direction / length ) * transform->GetMaxVelocity() * speedModifier ) - transform->GetVelocity();
 	}
 
 	sf::Vector2f SteeringSystem::Wander( const Steering::Handle& boid ) const
@@ -97,15 +101,19 @@ namespace Reflex::Systems
 		if( transform->GetVelocity().x == 0.0f && transform->GetVelocity().y == 0.0f )
 			transform->SetVelocity( Reflex::RandomUnitVector() );
 
-		boid->m_currentWanderAngle += Reflex::RandomFloat( -boid->m_wanderAngleDelta / 2.0f, boid->m_wanderAngleDelta / 2.0f );
-		const auto circleCentre = boid->GetTransform()->getPosition() + Reflex::ScaleTo( transform->GetVelocity(), boid->m_wanderCircleDistance );
-		const auto steeringPos = circleCentre + Reflex::VectorFromAngle( boid->m_currentWanderAngle, boid->m_wanderCircleRadius );
-
-		return Seek( boid, steeringPos );
+		boid->m_wanderDirection.x += Reflex::RandomFloat( -boid->m_wanderJitter / 2.0f, boid->m_wanderJitter / 2.0f ) * GetWorld().GetDeltaTime();
+		boid->m_wanderDirection.y += Reflex::RandomFloat( -boid->m_wanderJitter / 2.0f, boid->m_wanderJitter / 2.0f ) * GetWorld().GetDeltaTime();
+		Reflex::ScaleTo( boid->m_wanderDirection, boid->m_wanderCircleRadius );
+		const auto targetForce = Reflex::ScaleTo( Reflex::ScaleTo( transform->GetVelocity(), boid->m_wanderCircleDistance ) + boid->m_wanderDirection, transform->GetMaxVelocity() );
+		return ( targetForce - transform->GetVelocity() ) * boid->m_wanderForce * boid->m_forceMultiplier;
 	}
 
 	sf::Vector2f SteeringSystem::Pursue( const Steering::Handle& boid, const Object& target, const bool useArrival ) const
 	{
+		assert( target );
+		if( !target )
+			return {};
+
 		const auto speed = Reflex::GetMagnitude( boid->GetObject().GetTransform()->GetVelocity() );
 		const auto time = speed <= 0.0001f ? 0.0f : ( Reflex::GetDistance( boid->GetTransform()->getPosition(), target.GetTransform()->getPosition() ) / speed );
 		const auto targetPos = target.GetTransform()->getPosition() + target.GetTransform()->GetVelocity() * time;
@@ -138,23 +146,61 @@ namespace Reflex::Systems
 #endif
 			const auto nearbyTransform = nearby.GetTransform();
 			const auto nearbyPos = nearbyTransform->getPosition();
+			const auto direction = pos - nearbyPos;
 
-			if( Reflex::GetDistanceSq( pos, nearbyPos ) > boid->m_neighbourRange * boid->m_neighbourRange )
+			if( Reflex::GetMagnitudeSq( direction ) > boid->m_neighbourRange * boid->m_neighbourRange )
 				return;
 
 			counter++;
-			alignment += nearbyTransform->GetVelocity();
+			alignment += Reflex::Normalise( nearbyTransform->GetVelocity() );
 			cohesion += nearbyPos;
-			separation += pos - nearbyPos;
+			separation += direction / -Reflex::GetMagnitudeSq( direction );
 		} );
 
 		if( counter )
-			cohesion = Seek( boid, cohesion / ( float )counter );
+		{
+			cohesion /= ( float )counter;
+			cohesion = Reflex::Normalise( cohesion - boid->GetTransform()->getPosition() );
 
-		const auto alignmentForce = boid->IsBehaviourSet( Steering::Behaviours::Alignment ) ? boid->m_alignmentForce : 0.0f;
-		const auto cohesionForce = boid->IsBehaviourSet( Steering::Behaviours::Cohesion ) ? boid->m_cohesionForce : 0.0f;
-		const auto separationForce = boid->IsBehaviourSet( Steering::Behaviours::Separation ) ? boid->m_separationForce : 0.0f;
+			alignment /= ( float )counter;
+			alignment = Reflex::Normalise( alignment - Reflex::Normalise( boid->GetTransform()->GetVelocity() ) );
 
+			separation /= ( float )counter;
+		}
+
+		const auto alignmentForce = boid->IsBehaviourSet( SteeringBehaviours::Alignment ) ? boid->m_alignmentForce * boid->m_forceMultiplier : 0.0f;
+		const auto cohesionForce = boid->IsBehaviourSet( SteeringBehaviours::Cohesion ) ? boid->m_cohesionForce * boid->m_forceMultiplier : 0.0f;
+		const auto separationForce = boid->IsBehaviourSet( SteeringBehaviours::Separation ) ? boid->m_separationForce * boid->m_forceMultiplier : 0.0f;
 		return alignment * alignmentForce + cohesion * cohesionForce + separation * separationForce;
 	}
+
+	sf::Vector2f SteeringSystem::ObstacleAvoidance( const Steering::Handle& boid ) const
+	{
+		if( Reflex::GetMagnitudeSq( boid->GetTransform()->GetVelocity() ) <= 0.0001f )
+			return {};
+
+		const auto thisPos = boid->GetTransform()->getPosition();
+		const auto offset = boid->GetTransform()->GetVelocity() * boid->m_avoidanceTraceLength;
+
+		if( const auto middle = boid->GetWorld().RayCast( thisPos, thisPos + offset ) )
+		{
+			const auto steeringDirection = ( Reflex::ScaleTo( middle.normal, boid->GetTransform()->GetMaxVelocity() ) - boid->GetTransform()->GetVelocity() );
+			return steeringDirection * boid->m_avoidanceForce * boid->m_forceMultiplier;
+		}
+
+		if( const auto left = boid->GetWorld().RayCast( thisPos, thisPos + Reflex::RotateVector( offset, Reflex::ToRadians( 20.0f ) ) ) )
+		{
+			const auto steeringDirection = ( Reflex::ScaleTo( left.normal, boid->GetTransform()->GetMaxVelocity() ) - boid->GetTransform()->GetVelocity() );
+			return steeringDirection * boid->m_avoidanceForce * boid->m_forceMultiplier;
+		}
+
+		if( const auto right = boid->GetWorld().RayCast( thisPos, thisPos + Reflex::RotateVector( offset, Reflex::ToRadians( -20.0f ) ) ) )
+		{
+			const auto steeringDirection = ( Reflex::ScaleTo( right.normal, boid->GetTransform()->GetMaxVelocity() ) - boid->GetTransform()->GetVelocity() );
+			return steeringDirection * boid->m_avoidanceForce * boid->m_forceMultiplier;
+		}
+
+		return {};
+	}
+
 }

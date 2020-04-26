@@ -87,6 +87,8 @@ namespace Reflex::Components
 
 	void Transform::setPosition( const sf::Vector2f& position )
 	{
+		assert( !std::isinf( position.x ) && !std::isinf( position.y ) );
+
 #ifndef DISABLE_TILEMAP
 		if( m_useTileMap )
 		{
@@ -154,8 +156,9 @@ namespace Reflex::Components
 		m_finishedRotationCallback = nullptr;
 	}
 
-	void Transform::SetVelocity( const sf::Vector2f velocity )
+	void Transform::SetVelocity( const sf::Vector2f& velocity )
 	{
+		assert( !std::isinf( velocity.x ) && !std::isinf( velocity.y ) );
 		m_velocity = Reflex::Truncate( velocity, GetMaxVelocity() );
 	}
 

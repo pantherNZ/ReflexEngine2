@@ -24,7 +24,7 @@ namespace Reflex::Core
 			bool enableProfiling = false;
 
 			// Default will be window bounds
-			sf::FloatRect worldBounds = sf::FloatRect( 0.0f, 0.0f, ( float )videoMode.width, ( float )videoMode.width );
+			sf::FloatRect worldBounds = sf::FloatRect( 0.0f, 0.0f, ( float )videoMode.width, ( float )videoMode.height );
 			sf::Vector2f gravity = sf::Vector2f( 0.0f, 9.8f );
 
 			// Command Line Mode: Don't create a window - this is used for the unit tests project

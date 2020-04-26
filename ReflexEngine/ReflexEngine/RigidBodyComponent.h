@@ -13,6 +13,7 @@ namespace Reflex::Components
 		RigidBody( const Reflex::Object& object )
 			: Component< RigidBody >( object )
 			, EventTriggerer( GetWorld() )
+			, m_owningObject( object )
 		{
 		}
 
@@ -20,6 +21,7 @@ namespace Reflex::Components
 		RigidBody( const Reflex::Object& object, const b2BodyType bodyType )
 			: Component< RigidBody >( object )
 			, EventTriggerer( GetWorld() )
+			, m_owningObject( object )
 		{
 			type = bodyType;
 			Recreate();
@@ -29,6 +31,7 @@ namespace Reflex::Components
 		RigidBody( const Reflex::Object& object, const b2BodyDef& definition )
 			: Component< RigidBody >( object )
 			, EventTriggerer( GetWorld() )
+			, m_owningObject( object )
 		{
 			userData = definition.userData;
 			angle = definition.angle;
@@ -66,6 +69,7 @@ namespace Reflex::Components
 		void Recreate()
 		{
 			auto* oldBody = m_body;
+			userData = &m_owningObject;
 			position = Reflex::Vector2fToB2Vec( GetObject().GetTransform()->getPosition() );
 			m_body = GetObject().GetWorld().GetBox2DWorld().CreateBody( this );
 
@@ -78,5 +82,8 @@ namespace Reflex::Components
 
 	protected:
 		b2Body* m_body = nullptr;
+
+		// Used for userData in the b2Body so this object can be retrieve from the body (during raycast hits, collision callbacks etc.)
+		Object m_owningObject;
 	};
 }

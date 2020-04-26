@@ -39,8 +39,8 @@ namespace Reflex::Components
 		void RotateForDuration( const float degrees, const float durationSec, std::function< void( const Transform::Handle& ) > finishedRotationCallback );
 		void StopRotation();
 
-		void SetVelocity( const sf::Vector2f velocity );
-		void ModifyVelocity( const sf::Vector2f velocity ) { SetVelocity( GetVelocity() + velocity ); }
+		void SetVelocity( const sf::Vector2f& velocity );
+		void ModifyVelocity( const sf::Vector2f& velocity ) { SetVelocity( GetVelocity() + velocity ); }
 		sf::Vector2f GetVelocity() const { return m_velocity; }
 
 		void SetMaxVelocity( const float maxVelocity ) { m_maxVelocity = maxVelocity; }
@@ -76,7 +76,7 @@ namespace Reflex::Components
 		float m_rotateDurationSec = 0.0f;
 		std::function< void( const Transform::Handle& ) > m_finishedRotationCallback;
 		sf::Vector2f m_velocity = sf::Vector2f( 0.0f, 0.0f );
-		float m_maxVelocity = std::numeric_limits< float >::infinity();
+		float m_maxVelocity = 150.0f;
 		Reflex::BoundingBox localBounds;
 	};
 }
