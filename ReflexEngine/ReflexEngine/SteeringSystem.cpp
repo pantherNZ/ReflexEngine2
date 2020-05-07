@@ -159,18 +159,22 @@ namespace Reflex::Systems
 
 		if( counter )
 		{
+			const auto direction = Reflex::Normalise( boid->GetTransform()->GetVelocity() );
+			
 			cohesion /= ( float )counter;
-			cohesion = Reflex::Normalise( cohesion - boid->GetTransform()->getPosition() );
+			cohesion = Reflex::Normalise( Reflex::Normalise( cohesion - boid->GetTransform()->getPosition() ) - direction );
 
 			alignment /= ( float )counter;
-			alignment = Reflex::Normalise( alignment - Reflex::Normalise( boid->GetTransform()->GetVelocity() ) );
+			alignment = Reflex::Normalise( alignment - direction );
 
 			separation /= ( float )counter;
+			separation = Reflex::Normalise( separation - direction );
 		}
 
 		const auto alignmentForce = boid->IsBehaviourSet( SteeringBehaviours::Alignment ) ? boid->m_alignmentForce * boid->m_forceMultiplier : 0.0f;
 		const auto cohesionForce = boid->IsBehaviourSet( SteeringBehaviours::Cohesion ) ? boid->m_cohesionForce * boid->m_forceMultiplier : 0.0f;
 		const auto separationForce = boid->IsBehaviourSet( SteeringBehaviours::Separation ) ? boid->m_separationForce * boid->m_forceMultiplier : 0.0f;
+
 		return alignment * alignmentForce + cohesion * cohesionForce + separation * separationForce;
 	}
 
